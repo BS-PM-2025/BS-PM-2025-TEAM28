@@ -32,7 +32,7 @@ function Section({children, title}: SectionProps): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   return (
     <View style={styles.sectionContainer}>
-      <Text
+      <Textgit status
         style={[
           styles.sectionTitle,
           {
@@ -90,7 +90,7 @@ function App(): React.JSX.Element {
             paddingBottom: safePadding,
           }}>
           <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> qdsfghdfhggfhgfhgfhfghsdfs
+            Edit <Text style={styles.highlight}>App.tsx</Text> test test
             fsdfsfsfsfs
           </Section>
           <Section title="See Your Changes">
