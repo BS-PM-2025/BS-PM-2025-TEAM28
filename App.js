@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 function App() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Yarin the Goat</Text>
+      <Text style={styles.text}>Yarin</Text>
     </View>
   );
 }
