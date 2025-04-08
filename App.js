@@ -1,65 +1,19 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+// App.js
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Button,
-  useColorScheme,
-} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from './screens/HomeScreen';
+import Register from './screens/Register';
 
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+const Stack = createStackNavigator();
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-    flex: 1, // Ensures the view takes up the full screen
-    justifyContent: 'center', // Centers content vertically
-    alignItems: 'center', // Centers content horizontally
-  };
-
-  const handleRegister = () => {
-    console.log('Register button pressed');
-    // Add navigation or functionality for registration here
-  };
-
-  const handleLogin = () => {
-    console.log('Login button pressed');
-    // Add navigation or functionality for login here
-  };
-
+export default function App() {
   return (
-    <View style={backgroundStyle}>
-      <Text style={styles.title}>FMS</Text>
-      <View style={styles.buttonContainer}>
-        <Button title="Register" onPress={handleRegister} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button title="Login" onPress={handleLogin} />
-      </View>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Register" component={Register} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20, // Adds spacing between the title and buttons
-    color: Colors.black,
-  },
-  buttonContainer: {
-    marginVertical: 10, // Adds spacing between buttons
-    width: '80%', // Makes buttons take up 80% of the screen width
-  },
-});
-
-export default App;
