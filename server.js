@@ -69,15 +69,45 @@ app.post('/api/register', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+/////////////////////////////////////////////log in///////////////////////////////////////
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  console.log('🔐 Login attempt:', req.body);
 
+  if (!email || !password) {
+    return res.status(400).send('Email and password are required');
+  }
+
+  try {
+    const request = new sql.Request();
+    request.input('email', sql.NVarChar, email);
+    request.input('password', sql.NVarChar, password);
+
+    const result = await request.query(`
+      SELECT * FROM Users
+      WHERE Gmail = @email AND Password = @password
+    `);
+
+    if (result.recordset.length > 0) {
+      const user = result.recordset[0];
+      res.status(200).json({ success: true, user });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    res.status(500).send('Server error');
+  }
+});
+///////////////////////////////////////////////////////////////////////////////////////////////
 const startServer = async () => {
   try {
     await sql.connect(dbConfig);
     console.log('✅ Connected to SQL Server');
     await createUsersTableIfNotExists();
 
-    app.listen(3000, () => {
-      console.log('🚀 Server running at http://localhost:3000');
+    app.listen(3000, '0.0.0.0', () => {
+      console.log('🚀 Server running on all interfaces at port 3000');
     });
   } catch (err) {
     console.error('❌ Failed to start server:', err);
