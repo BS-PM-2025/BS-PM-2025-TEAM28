@@ -21,13 +21,12 @@ function Login({ navigation }) {
     }
 
     try {
-      const response = await axios.post('http://192.168.56.1:3000/api/login', {
+      const response = await axios.post('http://192.168.1.140:3000/api/login', {
         email,
         password,
       });
 
       if (response.data.success) {
-        // Navigate to AccountScreen and pass the user data
         navigation.navigate('AccountScreen', { user: response.data.user });
       } else {
         Alert.alert('Login Failed', response.data.message);
@@ -60,6 +59,12 @@ function Login({ navigation }) {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <Text style={{ color: 'blue', marginTop: 15, textAlign: 'center' }}>
+          Forgot Password?
+        </Text>
       </TouchableOpacity>
     </View>
   );
