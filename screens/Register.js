@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 function Register() {
   const [userType, setUserType] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
 
   const handleRegister = async () => {
     if (!userType || !name.trim() || !email.trim() || !password.trim()) {
@@ -32,11 +34,12 @@ function Register() {
       });
 
       if (response.status === 200) {
-        Alert.alert('Success', 'User registered successfully');
-        setUserType('');
-        setName('');
-        setEmail('');
-        setPassword('');
+        Alert.alert('Success', 'Registration successful! Please login.', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login', { prefillEmail: email })
+          }
+        ]);
       }
     } catch (error) {
       console.error('Registration error:', error.message);

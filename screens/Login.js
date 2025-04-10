@@ -1,5 +1,5 @@
 // screens/Login.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,37 @@ import {
   Alert,
 } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-function Login({ navigation }) {
+function Login({ navigation, route }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    // Check for pre-filled email from registration
+    if (route.params?.prefillEmail) {
+      setEmail(route.params.prefillEmail);
+    }
+
+    // Check for saved login credentials
+    checkSavedLogin();
+  }, []);
+
+  const checkSavedLogin = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('userEmail');
+      const savedPassword = await AsyncStorage.getItem('userPassword');
+      if (savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error('Error checking saved login:', error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -21,24 +48,47 @@ function Login({ navigation }) {
     }
 
     try {
+      console.log('Attempting login with:', { email, password });
       const response = await axios.post('http://192.168.1.249:3000/api/login', {
         email,
         password,
       });
 
+      console.log('Login response:', response.data);
+
       if (response.data.success) {
         const user = response.data.user;
-        if (user.IsAdmin) {
-          navigation.navigate('AdminScreen', { user });
+        console.log('User data:', user);
+        
+        // Save login credentials if remember me is checked
+        if (rememberMe) {
+          await AsyncStorage.setItem('userEmail', email);
+          await AsyncStorage.setItem('userPassword', password);
         } else {
-          navigation.navigate('AccountScreen', { user });
+          await AsyncStorage.removeItem('userEmail');
+          await AsyncStorage.removeItem('userPassword');
+        }
+
+        // Navigate based on user type
+        if (user.IsAdmin) {
+          console.log('Navigating to AdminScreen');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'AdminScreen', params: { user } }],
+          });
+        } else {
+          console.log('Navigating to AccountScreen');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'AccountScreen', params: { user } }],
+          });
         }
       } else {
-        Alert.alert('Login Failed', response.data.message);
+        Alert.alert('Login Failed', response.data.message || 'Invalid credentials');
       }
     } catch (error) {
-      console.error('Login error:', error.message);
-      Alert.alert('Error', 'Failed to log in');
+      console.error('Login error:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to log in');
     }
   };
 
@@ -52,6 +102,7 @@ function Login({ navigation }) {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -62,14 +113,25 @@ function Login({ navigation }) {
         secureTextEntry
       />
 
+      <TouchableOpacity 
+        style={styles.rememberMeContainer}
+        onPress={() => setRememberMe(!rememberMe)}
+      >
+        <MaterialIcons 
+          name={rememberMe ? "check-box" : "check-box-outline-blank"} 
+          size={24} 
+          color="#2c3e50" 
+        />
+        <Text style={styles.rememberMeText}>Remember Me</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <MaterialIcons name="login" size={24} color="white" />
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-        <Text style={{ color: 'blue', marginTop: 15, textAlign: 'center' }}>
-          Forgot Password?
-        </Text>
+        <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
   );
@@ -83,30 +145,50 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 26,
+    fontSize: 32,
     marginBottom: 40,
     textAlign: 'center',
-    color: '#333',
+    color: '#2c3e50',
+    fontWeight: 'bold',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#aaa',
+    borderColor: '#ddd',
     borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
+    padding: 15,
+    backgroundColor: '#f8f9fa',
     marginBottom: 15,
+    fontSize: 16,
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  rememberMeText: {
+    marginLeft: 8,
+    color: '#2c3e50',
+    fontSize: 16,
   },
   button: {
-    backgroundColor: 'green',
+    backgroundColor: '#27ae60',
     padding: 15,
     borderRadius: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'center',
+    gap: 10,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  forgotPassword: {
+    color: '#2c3e50',
+    marginTop: 15,
+    textAlign: 'center',
+    fontSize: 16,
   },
 });
 
