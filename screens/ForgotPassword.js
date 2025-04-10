@@ -11,7 +11,7 @@ export default function ForgotPassword({ navigation }) {
 
   const handleSendCode = async () => {
     try {
-      const res = await axios.post('http://192.168.56.1:3000/api/send-reset-code', { email });
+      const res = await axios.post('http://192.168.1.249:3000/api/send-reset-code', { email });
       Alert.alert('Success', res.data.message);
       setStep(2);
     } catch (err) {
@@ -21,7 +21,7 @@ export default function ForgotPassword({ navigation }) {
 
   const handleResetPassword = async () => {
     try {
-      const res = await axios.post('http://192.168.56.1:3000/api/reset-password', {
+      const res = await axios.post('http://192.168.1.249:3000/api/reset-password', {
         email,
         code,
         newPassword,

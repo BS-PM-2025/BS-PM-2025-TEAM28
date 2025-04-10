@@ -28,7 +28,8 @@ const createUsersTableIfNotExists = async () => {
       Name NVARCHAR(255) NOT NULL,
       Gmail NVARCHAR(255) NOT NULL,
       Password NVARCHAR(255) NOT NULL,
-      UserType VARCHAR(50) NOT NULL
+      UserType VARCHAR(50) NOT NULL,
+      IsAdmin BIT DEFAULT 0
     );
   `;
 
@@ -62,7 +63,7 @@ function generateCode() {
 
 // ➕ Register
 app.post('/api/register', async (req, res) => {
-  const { name, email, password, userType } = req.body;
+  const { name, email, password, userType, isAdmin } = req.body;
   console.log('📩 Register request received:', req.body);
 
   if (!name || !email || !password || !userType) {
@@ -76,10 +77,11 @@ app.post('/api/register', async (req, res) => {
     request.input('email', sql.NVarChar, email);
     request.input('password', sql.NVarChar, password);
     request.input('userType', sql.VarChar, userType);
+    request.input('isAdmin', sql.Bit, isAdmin || 0);
 
     const insertQuery = `
-      INSERT INTO Users (Name, Gmail, Password, UserType)
-      VALUES (@name, @email, @password, @userType)
+      INSERT INTO Users (Name, Gmail, Password, UserType, IsAdmin)
+      VALUES (@name, @email, @password, @userType, @isAdmin)
     `;
 
     await request.query(insertQuery);
@@ -97,7 +99,7 @@ app.post('/api/login', async (req, res) => {
   console.log('🔐 Login attempt:', req.body);
 
   if (!email || !password) {
-    return res.status(400).send('Email and password are required');
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
   try {
@@ -106,19 +108,31 @@ app.post('/api/login', async (req, res) => {
     request.input('password', sql.NVarChar, password);
 
     const result = await request.query(`
-      SELECT * FROM Users
+      SELECT ID, Name, Gmail, Password, UserType, IsAdmin 
+      FROM Users 
       WHERE Gmail = @email AND Password = @password
     `);
 
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
-      res.status(200).json({ success: true, user });
+      console.log('✅ Login successful for user:', user.Name);
+      res.status(200).json({ 
+        success: true, 
+        user: {
+          ID: user.ID,
+          Name: user.Name,
+          Gmail: user.Gmail,
+          UserType: user.UserType,
+          IsAdmin: user.IsAdmin === 1
+        }
+      });
     } else {
+      console.log('❌ Login failed: Invalid credentials');
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (err) {
     console.error('❌ Login error:', err);
-    res.status(500).send('Server error');
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
