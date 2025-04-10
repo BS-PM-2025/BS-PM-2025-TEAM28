@@ -21,13 +21,18 @@ function Login({ navigation }) {
     }
 
     try {
-      const response = await axios.post('http://192.168.1.140:3000/api/login', {
+      const response = await axios.post('http://192.168.1.249:3000/api/login', {
         email,
         password,
       });
 
       if (response.data.success) {
-        navigation.navigate('AccountScreen', { user: response.data.user });
+        const user = response.data.user;
+        if (user.IsAdmin) {
+          navigation.navigate('AdminScreen', { user });
+        } else {
+          navigation.navigate('AccountScreen', { user });
+        }
       } else {
         Alert.alert('Login Failed', response.data.message);
       }

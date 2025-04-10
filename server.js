@@ -28,7 +28,8 @@ const createUsersTableIfNotExists = async () => {
       Name NVARCHAR(255) NOT NULL,
       Gmail NVARCHAR(255) NOT NULL,
       Password NVARCHAR(255) NOT NULL,
-      UserType VARCHAR(50) NOT NULL
+      UserType VARCHAR(50) NOT NULL,
+      IsAdmin BIT DEFAULT 0
     );
   `;
 
@@ -62,7 +63,7 @@ function generateCode() {
 
 // ➕ Register
 app.post('/api/register', async (req, res) => {
-  const { name, email, password, userType } = req.body;
+  const { name, email, password, userType, isAdmin } = req.body;
   console.log('📩 Register request received:', req.body);
 
   if (!name || !email || !password || !userType) {
@@ -76,10 +77,11 @@ app.post('/api/register', async (req, res) => {
     request.input('email', sql.NVarChar, email);
     request.input('password', sql.NVarChar, password);
     request.input('userType', sql.VarChar, userType);
+    request.input('isAdmin', sql.Bit, isAdmin || 0);
 
     const insertQuery = `
-      INSERT INTO Users (Name, Gmail, Password, UserType)
-      VALUES (@name, @email, @password, @userType)
+      INSERT INTO Users (Name, Gmail, Password, UserType, IsAdmin)
+      VALUES (@name, @email, @password, @userType, @isAdmin)
     `;
 
     await request.query(insertQuery);

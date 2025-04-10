@@ -7,6 +7,7 @@ import Register from './screens/Register';
 import Login from './screens/Login';
 import AccountScreen from './screens/AccountScreen';
 import ForgotPassword from './screens/ForgotPassword';
+import AdminScreen from './screens/AdminScreen';
 
 const Stack = createStackNavigator();
 
@@ -19,8 +20,14 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} /> 
         <Stack.Screen name="AccountScreen" component={AccountScreen} /> 
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-
-        
+        <Stack.Screen 
+          name="AdminScreen" 
+          component={AdminScreen}
+          options={{
+            title: 'Admin Dashboard',
+            headerLeft: null // This prevents going back to login screen
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
