@@ -1,29 +1,36 @@
 pipeline {
     agent none
+
     stages {
         stage('Build') {
             agent {
                 docker {
-                    image 'python:2-alpine'
+                    image 'node:18-alpine'
                 }
             }
             steps {
-                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+               
+                sh 'node --check sources/add2vals.js'
+                sh 'node --check sources/calc.js'
             }
         }
 
         stage('Test') {
             agent {
                 docker {
-                    image 'qnib/pytest'
+                    image 'node:18-alpine'
                 }
             }
             steps {
-                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+               
+                sh 'npm install'
+
+               
+                sh 'npx jest --ci --reporters=default --reporters=jest-junit'
             }
             post {
                 always {
-                    junit 'test-reports/results.xml'
+                    junit 'junit.xml' // this is the default output file for jest-junit
                 }
             }
         }
