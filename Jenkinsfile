@@ -5,7 +5,9 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    docker.image('python:2-alpine').inside {
+                    def pythonImage = docker.image('python:2-alpine')
+                    pythonImage.pull()
+                    pythonImage.inside {
                         sh 'python -m py_compile sources/add2vals.py sources/calc.py'
                     }
                 }
@@ -15,8 +17,10 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    docker.image('qnib/pytest').inside {
-                        sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+                    def pytestImage = docker.image('qnib/pytest')
+                    pytestImage.pull()
+                    pytestImage.inside {
+                        sh 'py.test --verbose --junit-xml=test-reports/results.xml sources/test_calc.py'
                     }
                 }
             }
