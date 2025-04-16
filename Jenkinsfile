@@ -4,29 +4,19 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                script {
-                    def pythonImage = docker.image('python:2-alpine')
-                    pythonImage.pull()
-                    pythonImage.inside {
-                        sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-                    }
-                }
+                sh 'node --check sources/add2vals.js'
+                sh 'node --check sources/calc.js'
             }
         }
 
         stage('Test') {
             steps {
-                script {
-                    def pytestImage = docker.image('qnib/pytest')
-                    pytestImage.pull()
-                    pytestImage.inside {
-                        sh 'py.test --verbose --junit-xml=test-reports/results.xml sources/test_calc.py'
-                    }
-                }
+                sh 'npm install'
+                sh 'npx jest --ci --reporters=default --reporters=jest-junit'
             }
             post {
                 always {
-                    junit 'test-reports/results.xml'
+                    junit 'junit.xml'
                 }
             }
         }
