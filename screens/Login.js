@@ -16,6 +16,7 @@ function Login({ navigation, route }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // Check for pre-filled email from registration
@@ -105,13 +106,25 @@ function Login({ navigation, route }) {
         autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity 
+          style={styles.showPasswordButton}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <MaterialIcons 
+            name={showPassword ? "visibility-off" : "visibility"} 
+            size={24} 
+            color="#666" 
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity 
         style={styles.rememberMeContainer}
@@ -159,6 +172,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     marginBottom: 15,
     fontSize: 16,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 15,
+    fontSize: 16,
+  },
+  showPasswordButton: {
+    padding: 15,
   },
   rememberMeContainer: {
     flexDirection: 'row',
