@@ -8,10 +8,8 @@ function AdminScreen({ route, navigation }) {
 
   const handleLogout = async () => {
     try {
-      // Clear saved login credentials
       await AsyncStorage.removeItem('userEmail');
       await AsyncStorage.removeItem('userPassword');
-      // Navigate to Home screen
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
@@ -25,9 +23,17 @@ function AdminScreen({ route, navigation }) {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Admin Dashboard</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <MaterialIcons name="logout" size={24} color="#e74c3c" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={() => navigation.navigate('Settings', { user })}
+          >
+            <MaterialIcons name="settings" size={24} color="#2c3e50" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+            <MaterialIcons name="logout" size={24} color="#e74c3c" />
+          </TouchableOpacity>
+        </View>
       </View>
       
       <Text style={styles.welcomeText}>Welcome, {user.Name}!</Text>
@@ -53,48 +59,56 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
-  logoutButton: {
-    padding: 10,
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 8,
+    marginLeft: 10,
   },
   welcomeText: {
     fontSize: 18,
-    marginBottom: 30,
-    color: '#666',
+    color: '#2c3e50',
+    padding: 20,
+    paddingBottom: 0,
   },
   section: {
-    marginBottom: 30,
+    padding: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#444',
+    color: '#2c3e50',
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: '#2c3e50',
+    backgroundColor: '#27ae60',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
+    marginBottom: 15,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

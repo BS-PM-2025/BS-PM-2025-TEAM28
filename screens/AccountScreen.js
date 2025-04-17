@@ -9,10 +9,8 @@ function AccountScreen({ route, navigation }) {
 
   const handleLogout = async () => {
     try {
-      // Clear saved login credentials
       await AsyncStorage.removeItem('userEmail');
       await AsyncStorage.removeItem('userPassword');
-      // Navigate to Home screen
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
@@ -26,9 +24,17 @@ function AccountScreen({ route, navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Welcome, {user.Name}!</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <MaterialIcons name="logout" size={24} color="#e74c3c" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={() => navigation.navigate('Settings', { user })}
+          >
+            <MaterialIcons name="settings" size={24} color="#2c3e50" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+            <MaterialIcons name="logout" size={24} color="#e74c3c" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.infoContainer}>
@@ -50,25 +56,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
-  logoutButton: {
-    padding: 10,
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 8,
+    marginLeft: 10,
   },
   infoContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
     padding: 20,
   },
   infoRow: {
@@ -77,8 +87,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   infoText: {
-    fontSize: 18,
     marginLeft: 10,
+    fontSize: 16,
     color: '#2c3e50',
   },
 });
