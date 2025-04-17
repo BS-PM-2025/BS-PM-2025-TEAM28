@@ -123,7 +123,7 @@ app.post('/api/login', async (req, res) => {
           Name: user.Name,
           Gmail: user.Gmail,
           UserType: user.UserType,
-          IsAdmin: user.IsAdmin === 1
+          IsAdmin: user.IsAdmin === 1 || user.IsAdmin === true ||  user.IsAdmin === '1'
         }
       });
     } else {

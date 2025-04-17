@@ -31,7 +31,7 @@ export default function App() {
       if (savedEmail && savedPassword) {
         // Attempt to login with saved credentials
         try {
-          const response = await axios.post('http://192.168.1.249:3000/api/login', {
+          const response = await axios.post('http://192.168.1.140:3000/api/login', {
             email: savedEmail,
             password: savedPassword,
           });
