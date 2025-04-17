@@ -42,7 +42,6 @@ const createUsersTableIfNotExists = async () => {
   }
 };
 
-// 🚀 Email config
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -54,14 +53,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// 🧠 In-memory storage for reset codes
 const resetCodes = new Map();
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ➕ Register
 app.post('/api/register', async (req, res) => {
   const { name, email, password, userType, isAdmin } = req.body;
   console.log('📩 Register request received:', req.body);
@@ -93,7 +90,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// 🔐 Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('🔐 Login attempt:', req.body);
@@ -123,7 +119,7 @@ app.post('/api/login', async (req, res) => {
           Name: user.Name,
           Gmail: user.Gmail,
           UserType: user.UserType,
-          IsAdmin: user.IsAdmin === 1
+          IsAdmin: user.IsAdmin === 1 || user.IsAdmin === true || user.IsAdmin === '1'
         }
       });
     } else {
@@ -136,7 +132,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// 📧 Send reset code
 app.post('/api/send-reset-code', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).send({ message: 'Email is required' });
@@ -174,30 +169,45 @@ app.post('/api/send-reset-code', async (req, res) => {
   }
 });
 
-// 🔁 Reset password
 app.post('/api/reset-password', async (req, res) => {
-  const { email, code, newPassword } = req.body;
-  const validCode = resetCodes.get(email);
-
-  if (!validCode || code !== validCode) {
-    return res.status(400).send({ message: 'Invalid or expired code' });
+  const { email, currentPassword, newPassword } = req.body;
+  
+  if (!email || !currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
   }
 
   try {
-    const request = new sql.Request();
-    request.input('email', sql.NVarChar, email);
-    request.input('newPassword', sql.NVarChar, newPassword);
-    await request.query(`UPDATE Users SET Password = @newPassword WHERE Gmail = @email`);
+    // First verify the current password
+    const verifyRequest = new sql.Request();
+    verifyRequest.input('email', sql.NVarChar, email);
+    verifyRequest.input('currentPassword', sql.NVarChar, currentPassword);
+    
+    const verifyResult = await verifyRequest.query(`
+      SELECT * FROM Users 
+      WHERE Gmail = @email AND Password = @currentPassword
+    `);
 
-    resetCodes.delete(email);
-    res.send({ message: 'Password has been reset successfully' });
+    if (verifyResult.recordset.length === 0) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    const updateRequest = new sql.Request();
+    updateRequest.input('email', sql.NVarChar, email);
+    updateRequest.input('newPassword', sql.NVarChar, newPassword);
+    
+    await updateRequest.query(`
+      UPDATE Users 
+      SET Password = @newPassword 
+      WHERE Gmail = @email
+    `);
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: 'Server error' });
+    console.error('❌ Password reset error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// 🚀 Start server
 const startServer = async () => {
   try {
     await sql.connect(dbConfig);
