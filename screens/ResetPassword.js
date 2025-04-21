@@ -28,7 +28,7 @@ function ResetPassword({ navigation, route }) {
     }
 
     try {
-      const loginResponse = await axios.post('http://192.168.1.249:3000/api/login', {
+      const loginResponse = await axios.post('http://192.168.1.140:3000/api/login', {
         email: user.Gmail,
         password: currentPassword,
       });
@@ -38,7 +38,7 @@ function ResetPassword({ navigation, route }) {
         return;
       }
 
-      const response = await axios.post('http://192.168.1.249:3000/api/reset-password', {
+      const response = await axios.post('http://192.168.1.140:3000/api/reset-password', {
         email: user.Gmail,
         currentPassword,
         newPassword,
