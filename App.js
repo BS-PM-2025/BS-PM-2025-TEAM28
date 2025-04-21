@@ -12,6 +12,7 @@ import ForgotPassword from './screens/ForgotPassword';
 import AdminScreen from './screens/AdminScreen';
 import Settings from './screens/Settings';
 import ResetPassword from './screens/ResetPassword';
+import ManageUsersScreen from './screens/ManageUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -77,6 +78,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Login" component={Login} /> 
+        
         <Stack.Screen 
           name="AccountScreen" 
           component={AccountScreen}
@@ -104,6 +106,13 @@ export default function App() {
           component={ResetPassword}
           options={{
             headerShown: false
+          }}
+        />
+        <Stack.Screen 
+          name="ManageUsers" 
+          component={ManageUsersScreen}
+          options={{
+            title: 'Manage Users',
           }}
         />
       </Stack.Navigator>
