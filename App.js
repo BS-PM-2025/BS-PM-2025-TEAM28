@@ -10,6 +10,8 @@ import Login from './screens/Login';
 import AccountScreen from './screens/AccountScreen';
 import ForgotPassword from './screens/ForgotPassword';
 import AdminScreen from './screens/AdminScreen';
+import Settings from './screens/Settings';
+import ResetPassword from './screens/ResetPassword';
 
 const Stack = createStackNavigator();
 
@@ -19,7 +21,6 @@ export default function App() {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
     checkLoginStatus();
   }, []);
 
@@ -29,7 +30,6 @@ export default function App() {
       const savedPassword = await AsyncStorage.getItem('userPassword');
       
       if (savedEmail && savedPassword) {
-        // Attempt to login with saved credentials
         try {
           const response = await axios.post('http://192.168.1.140:3000/api/login', {
             email: savedEmail,
@@ -40,21 +40,18 @@ export default function App() {
             const user = response.data.user;
             setUserData(user);
             
-            // Set initial route based on user type
             if (user.IsAdmin) {
               setInitialRoute('AdminScreen');
             } else {
               setInitialRoute('AccountScreen');
             }
           } else {
-            // If login fails, clear saved credentials
             await AsyncStorage.removeItem('userEmail');
             await AsyncStorage.removeItem('userPassword');
             setInitialRoute('Home');
           }
         } catch (error) {
           console.error('Auto-login error:', error);
-          // If there's an error, clear saved credentials
           await AsyncStorage.removeItem('userEmail');
           await AsyncStorage.removeItem('userPassword');
           setInitialRoute('Home');
@@ -71,7 +68,6 @@ export default function App() {
   };
 
   if (isLoading) {
-    // You could return a loading screen here
     return null;
   }
 
@@ -93,7 +89,21 @@ export default function App() {
           initialParams={{ user: userData }}
           options={{
             title: 'Admin Dashboard',
-            headerLeft: null // This prevents going back to login screen
+            headerLeft: null 
+          }}
+        />
+        <Stack.Screen 
+          name="Settings" 
+          component={Settings}
+          options={{
+            headerShown: false
+          }}
+        />
+        <Stack.Screen 
+          name="ResetPassword" 
+          component={ResetPassword}
+          options={{
+            headerShown: false
           }}
         />
       </Stack.Navigator>
