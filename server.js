@@ -61,14 +61,55 @@ function generateCode() {
 
 app.post('/api/register', async (req, res) => {
   const { name, email, password, userType, isAdmin } = req.body;
-  console.log('📩 Register request received:', req.body);
+  console.log('📩 Register request received:', { name, email, userType });
 
   if (!name || !email || !password || !userType) {
-    console.log('⚠️ Missing fields');
-    return res.status(400).send('All fields are required');
+    return res.status(400).json({ 
+      success: false, 
+      message: 'All fields are required' 
+    });
+  }
+
+  if (name.trim().length < 2) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Name must be at least 2 characters long' 
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Please enter a valid email address' 
+    });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number' 
+    });
   }
 
   try {
+    const checkRequest = new sql.Request();
+    checkRequest.input('email', sql.NVarChar, email);
+    
+    const checkResult = await checkRequest.query(`
+      SELECT COUNT(*) as count 
+      FROM Users 
+      WHERE Gmail = @email
+    `);
+
+    if (checkResult.recordset[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email address is already registered' 
+      });
+    }
+
     const request = new sql.Request();
     request.input('name', sql.NVarChar, name);
     request.input('email', sql.NVarChar, email);
@@ -82,11 +123,17 @@ app.post('/api/register', async (req, res) => {
     `;
 
     await request.query(insertQuery);
-    console.log('✅ User inserted successfully');
-    res.status(200).send('User registered successfully');
+    console.log('✅ User registered successfully:', { name, email, userType });
+    res.status(200).json({ 
+      success: true, 
+      message: 'User registered successfully' 
+    });
   } catch (err) {
-    console.error('❌ DB insert error:', err);
-    res.status(500).send('Server error');
+    console.error('❌ Registration error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during registration' 
+    });
   }
 });
 
@@ -101,29 +148,34 @@ app.post('/api/login', async (req, res) => {
   try {
     const request = new sql.Request();
     request.input('email', sql.NVarChar, email);
-    request.input('password', sql.NVarChar, password);
 
     const result = await request.query(`
       SELECT ID, Name, Gmail, Password, UserType, IsAdmin 
       FROM Users 
-      WHERE Gmail = @email AND Password = @password
+      WHERE Gmail = @email
     `);
 
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
-      console.log('✅ Login successful for user:', user.Name);
-      res.status(200).json({ 
-        success: true, 
-        user: {
-          ID: user.ID,
-          Name: user.Name,
-          Gmail: user.Gmail,
-          UserType: user.UserType,
-          IsAdmin: user.IsAdmin === 1 || user.IsAdmin === true || user.IsAdmin === '1'
-        }
-      });
+      
+      if (password === user.Password) {
+        console.log('✅ Login successful for user:', user.Name);
+        res.status(200).json({ 
+          success: true, 
+          user: {
+            ID: user.ID,
+            Name: user.Name,
+            Gmail: user.Gmail,
+            UserType: user.UserType,
+            IsAdmin: user.IsAdmin === 1 || user.IsAdmin === true || user.IsAdmin === '1'
+          }
+        });
+      } else {
+        console.log('❌ Login failed: Invalid password');
+        res.status(401).json({ success: false, message: 'Invalid credentials' });
+      }
     } else {
-      console.log('❌ Login failed: Invalid credentials');
+      console.log('❌ Login failed: User not found');
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (err) {
@@ -171,23 +223,30 @@ app.post('/api/send-reset-code', async (req, res) => {
 
 app.post('/api/reset-password', async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;
-  
+
   if (!email || !currentPassword || !newPassword) {
     return res.status(400).json({ success: false, message: 'All fields are required' });
   }
 
-  try {
-    // First verify the current password
-    const verifyRequest = new sql.Request();
-    verifyRequest.input('email', sql.NVarChar, email);
-    verifyRequest.input('currentPassword', sql.NVarChar, currentPassword);
-    
-    const verifyResult = await verifyRequest.query(`
-      SELECT * FROM Users 
-      WHERE Gmail = @email AND Password = @currentPassword
-    `);
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
+    });
+  }
 
-    if (verifyResult.recordset.length === 0) {
+  try {
+    const request = new sql.Request();
+    request.input('email', sql.NVarChar, email);
+    const result = await request.query(`SELECT * FROM Users WHERE Gmail = @email`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const user = result.recordset[0];
+    if (currentPassword !== user.Password) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect' });
     }
 
@@ -201,10 +260,50 @@ app.post('/api/reset-password', async (req, res) => {
       WHERE Gmail = @email
     `);
 
-    res.json({ success: true, message: 'Password has been reset successfully' });
-  } catch (err) {
-    console.error('❌ Password reset error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+});
+
+app.post('/api/reset-password-with-code', async (req, res) => {
+  const { email, code, newPassword } = req.body;
+
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number'
+    });
+  }
+
+  try {
+    const storedCode = resetCodes.get(email);
+    if (!storedCode || storedCode !== code) {
+      return res.status(401).json({ success: false, message: 'Invalid reset code' });
+    }
+
+    const updateRequest = new sql.Request();
+    updateRequest.input('email', sql.NVarChar, email);
+    updateRequest.input('newPassword', sql.NVarChar, newPassword);
+    
+    await updateRequest.query(`
+      UPDATE Users 
+      SET Password = @newPassword 
+      WHERE Gmail = @email
+    `);
+
+    resetCodes.delete(email);
+
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
   }
 });
 

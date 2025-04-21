@@ -15,10 +15,30 @@ function ResetPassword({ navigation, route }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validatePassword = (password) => {
+    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleResetPassword = async () => {
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       Alert.alert('Missing Fields', 'Please fill in all fields');
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      Alert.alert(
+        'Invalid Password', 
+        'Password must be at least 8 characters long and contain:\n\n' +
+        '• At least one uppercase letter\n' +
+        '• At least one lowercase letter\n' +
+        '• At least one number'
+      );
       return;
     }
 
@@ -71,35 +91,78 @@ function ResetPassword({ navigation, route }) {
       </View>
 
       <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Current Password"
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            secureTextEntry={!showCurrentPassword}
+          />
+          <TouchableOpacity 
+            style={styles.showPasswordButton}
+            onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+          >
+            <MaterialIcons 
+              name={showCurrentPassword ? "visibility-off" : "visibility"} 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="New Password"
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry={!showNewPassword}
+          />
+          <TouchableOpacity 
+            style={styles.showPasswordButton}
+            onPress={() => setShowNewPassword(!showNewPassword)}
+          >
+            <MaterialIcons 
+              name={showNewPassword ? "visibility-off" : "visibility"} 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm New Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Confirm New Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+          />
+          <TouchableOpacity 
+            style={styles.showPasswordButton}
+            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            <MaterialIcons 
+              name={showConfirmPassword ? "visibility-off" : "visibility"} 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.requirements}>
+          Password must contain:{'\n'}
+          • At least 8 characters{'\n'}
+          • At least one uppercase letter{'\n'}
+          • At least one lowercase letter{'\n'}
+          • At least one number
+        </Text>
 
         <TouchableOpacity 
           style={styles.button}
           onPress={handleResetPassword}
         >
-          <MaterialIcons name="lock-reset" size={24} color="white" />
           <Text style={styles.buttonText}>Reset Password</Text>
         </TouchableOpacity>
       </View>
@@ -120,38 +183,50 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   backButton: {
-    marginRight: 15,
+    marginRight: 10,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
   form: {
     padding: 20,
   },
-  input: {
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 15,
     backgroundColor: '#f8f9fa',
     marginBottom: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 15,
     fontSize: 16,
+  },
+  showPasswordButton: {
+    padding: 15,
   },
   button: {
     backgroundColor: '#27ae60',
     padding: 15,
     borderRadius: 10,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    marginTop: 20,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  requirements: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
 
