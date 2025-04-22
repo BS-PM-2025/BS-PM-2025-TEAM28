@@ -40,16 +40,18 @@ function AdminScreen({ route, navigation }) {
       
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Admin Controls</Text>
-        
-        <TouchableOpacity style={styles.button}>
-          <MaterialIcons name="people" size={24} color="white" />
-          <Text style={styles.buttonText}>Manage Users</Text>
-        </TouchableOpacity>
-        
+    
         <TouchableOpacity style={styles.button}>
           <MaterialIcons name="location-on" size={24} color="white" />
           <Text style={styles.buttonText}>Manage Shelters</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.button}
+  onPress={() => navigation.navigate('ManageUsers', { adminId: user.ID })}
+>
+  <MaterialIcons name="people" size={24} color="white" />
+  <Text style={styles.buttonText}>Manage Users</Text>
+</TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -113,4 +115,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminScreen; 
+export default AdminScreen;

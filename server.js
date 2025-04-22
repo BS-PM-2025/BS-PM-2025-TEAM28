@@ -34,11 +34,11 @@ const createUsersTableIfNotExists = async () => {
   `;
 
   try {
-    console.log('🔧 Creating Users table if not exists...');
+    console.log('Creating Users table if not exists...');
     await sql.query(query);
-    console.log('✅ Users table created or already exists.');
+    console.log('Users table created or already exists.');
   } catch (err) {
-    console.error('❌ Error creating Users table:', err);
+    console.error('Error creating Users table:', err);
   }
 };
 
@@ -61,7 +61,7 @@ function generateCode() {
 
 app.post('/api/register', async (req, res) => {
   const { name, email, password, userType, isAdmin } = req.body;
-  console.log('📩 Register request received:', { name, email, userType });
+  console.log('Register request received:', { name, email, userType });
 
   if (!name || !email || !password || !userType) {
     return res.status(400).json({ 
@@ -123,13 +123,13 @@ app.post('/api/register', async (req, res) => {
     `;
 
     await request.query(insertQuery);
-    console.log('✅ User registered successfully:', { name, email, userType });
+    console.log('User registered successfully:', { name, email, userType });
     res.status(200).json({ 
       success: true, 
       message: 'User registered successfully' 
     });
   } catch (err) {
-    console.error('❌ Registration error:', err);
+    console.error('Registration error:', err);
     res.status(500).json({ 
       success: false, 
       message: 'Server error during registration' 
@@ -139,7 +139,7 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log('🔐 Login attempt:', req.body);
+  console.log('Login attempt:', req.body);
 
   if (!email || !password) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
@@ -159,7 +159,7 @@ app.post('/api/login', async (req, res) => {
       const user = result.recordset[0];
       
       if (password === user.Password) {
-        console.log('✅ Login successful for user:', user.Name);
+        console.log('Login successful for user:', user.Name);
         res.status(200).json({ 
           success: true, 
           user: {
@@ -171,15 +171,15 @@ app.post('/api/login', async (req, res) => {
           }
         });
       } else {
-        console.log('❌ Login failed: Invalid password');
+        console.log('Login failed: Invalid password');
         res.status(401).json({ success: false, message: 'Invalid credentials' });
       }
     } else {
-      console.log('❌ Login failed: User not found');
+      console.log('Login failed: User not found');
       res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (err) {
-    console.error('❌ Login error:', err);
+    console.error('Login error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -207,10 +207,10 @@ app.post('/api/send-reset-code', async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error('❌ Email send error:', error); 
+        console.error('Email send error:', error); 
         return res.status(500).send({ message: 'Failed to send email' });
       } else {
-        console.log('✅ Email sent:', info.response);
+        console.log('Email sent:', info.response);
         res.send({ message: 'Reset code sent to your email' });
       }
     });
@@ -218,6 +218,30 @@ app.post('/api/send-reset-code', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send({ message: 'Server error' });
+  }
+});
+
+app.get('/api/users', async (req, res) => {
+  try {
+    const request = new sql.Request();
+    const result = await request.query('SELECT ID, Name, Gmail FROM Users');
+    res.status(200).json({ users: result.recordset });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = new sql.Request();
+    request.input('id', sql.Int, id);
+    await request.query('DELETE FROM Users WHERE ID = @id');
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -310,14 +334,14 @@ app.post('/api/reset-password-with-code', async (req, res) => {
 const startServer = async () => {
   try {
     await sql.connect(dbConfig);
-    console.log('✅ Connected to SQL Server');
+    console.log('Connected to SQL Server');
     await createUsersTableIfNotExists();
 
     app.listen(3000, '0.0.0.0', () => {
-      console.log('🚀 Server running on all interfaces at port 3000');
+      console.log('Server running on all interfaces at port 3000');
     });
   } catch (err) {
-    console.error('❌ Failed to start server:', err);
+    console.error('Failed to start server:', err);
   }
 };
 

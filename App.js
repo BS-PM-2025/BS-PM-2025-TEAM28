@@ -12,6 +12,7 @@ import ForgotPassword from './screens/ForgotPassword';
 import AdminScreen from './screens/AdminScreen';
 import Settings from './screens/Settings';
 import ResetPassword from './screens/ResetPassword';
+import ManageUsersScreen from './screens/ManageUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -31,7 +32,7 @@ export default function App() {
       
       if (savedEmail && savedPassword) {
         try {
-          const response = await axios.post('http://192.168.56.1:3000/api/login', {
+          const response = await axios.post('http://192.168.1.140:3000/api/login', {
             email: savedEmail,
             password: savedPassword,
           });
@@ -77,6 +78,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Login" component={Login} /> 
+        
         <Stack.Screen 
           name="AccountScreen" 
           component={AccountScreen}
@@ -104,6 +106,13 @@ export default function App() {
           component={ResetPassword}
           options={{
             headerShown: false
+          }}
+        />
+        <Stack.Screen 
+          name="ManageUsers" 
+          component={ManageUsersScreen}
+          options={{
+            title: 'Manage Users',
           }}
         />
       </Stack.Navigator>
