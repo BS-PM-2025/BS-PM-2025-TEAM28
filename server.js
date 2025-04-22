@@ -58,7 +58,7 @@ const resetCodes = new Map();
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
+///////////////////////////////////register//////////////////////////////////////
 app.post('/api/register', async (req, res) => {
   const { name, email, password, userType, isAdmin } = req.body;
   console.log('Register request received:', { name, email, userType });
@@ -136,7 +136,8 @@ app.post('/api/register', async (req, res) => {
     });
   }
 });
-
+/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////login///////////////////////////////////////
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('Login attempt:', req.body);
@@ -183,6 +184,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+////////////////////////////////////////////////////////////////////////////
 
 app.post('/api/send-reset-code', async (req, res) => {
   const { email } = req.body;
@@ -220,6 +222,7 @@ app.post('/api/send-reset-code', async (req, res) => {
     res.status(500).send({ message: 'Server error' });
   }
 });
+///////////////////////////users/////////////////////////////////
 
 app.get('/api/users', async (req, res) => {
   try {
@@ -231,7 +234,6 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 app.delete('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -244,7 +246,34 @@ app.delete('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+/////////////////////////////////////////////////////////////////////////
+///////////////////////////shelters//////////////////////
+app.get('/api/shelters', async (req, res) => {
+  try {
+    const request = new sql.Request();
+    const result = await request.query('SELECT * FROM Shelters');
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching shelters:', error);
+    res.status(500).json({ message: 'Failed to fetch shelters' });
+  }
+});
+app.delete('/api/shelters/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = new sql.Request();
+    request.input('id', sql.Int, id);
+    await request.query('DELETE FROM Shelters WHERE ID = @id');
+    res.status(200).json({ message: 'Shelter deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting shelter:', error);
+    res.status(500).json({ message: 'Failed to delete shelter' });
+  }
+});
+//////////////////////////////////////////
 
+
+///////////reset password ////////////////////////////////////////
 app.post('/api/reset-password', async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;
 

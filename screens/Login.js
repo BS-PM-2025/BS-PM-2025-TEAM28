@@ -50,7 +50,7 @@ function Login({ navigation, route }) {
 
     try {
       console.log('Attempting login with:', { email, password });
-      const response = await axios.post('http://192.168.1.140:3000/api/login', {
+      const response = await axios.post('http://192.168.56.1:3000/api/login', {
         email,
         password,
       });
@@ -88,7 +88,7 @@ function Login({ navigation, route }) {
         Alert.alert('Login Failed', response.data.message || 'Invalid credentials');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      
       Alert.alert('Error', error.response?.data?.message || 'Failed to log in');
     }
   };

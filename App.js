@@ -13,6 +13,7 @@ import AdminScreen from './screens/AdminScreen';
 import Settings from './screens/Settings';
 import ResetPassword from './screens/ResetPassword';
 import ManageUsersScreen from './screens/ManageUsersScreen';
+import Shelters from './screens/Shelters';
 
 const Stack = createStackNavigator();
 
@@ -94,6 +95,7 @@ export default function App() {
             headerLeft: null 
           }}
         />
+         <Stack.Screen name="Shelters" component={Shelters} />
         <Stack.Screen 
           name="Settings" 
           component={Settings}

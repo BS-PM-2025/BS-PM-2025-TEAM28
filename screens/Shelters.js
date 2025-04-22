@@ -22,7 +22,7 @@ function Shelters({ navigation }) {
     try {
       await axios.delete(`http://192.168.56.1:3000/api/shelters/${id}`);
       Alert.alert('Success', 'Shelter deleted successfully');
-      // Refresh the shelters list after deletion
+      
       fetchShelters();
     } catch (error) {
       console.error('Error deleting shelter:', error);
