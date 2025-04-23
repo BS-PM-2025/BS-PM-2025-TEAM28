@@ -270,6 +270,23 @@ app.delete('/api/shelters/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to delete shelter' });
   }
 });
+app.post('/api/shelters', async (req, res) => {
+  const { Name, Latitude, Longitude } = req.body;
+  try {
+    const request = new sql.Request();
+    request.input('Name', sql.NVarChar, Name);
+    request.input('Latitude', sql.Float, Latitude);
+    request.input('Longitude', sql.Float, Longitude);
+    await request.query(`
+      INSERT INTO Shelters (Name, Latitude, Longitude)
+      VALUES (@Name, @Latitude, @Longitude)
+    `);
+    res.status(200).json({ message: 'Shelter added successfully' });
+  } catch (error) {
+    console.error('Error adding shelter:', error);
+    res.status(500).json({ message: 'Failed to add shelter' });
+  }
+});
 //////////////////////////////////////////
 
 

@@ -51,7 +51,7 @@ export default function ForgotPassword({ navigation }) {
     }
 
     try {
-      const res = await axios.post('http://192.168.1.140:3000/api/reset-password', {
+      const res = await axios.post('http://192.168.56.1:3000/api/reset-password', {
         email,
         code,
         newPassword,

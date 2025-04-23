@@ -23,7 +23,7 @@ function ManageUsersScreen({ navigation, route }) {
 
   const deleteUser = async (userId) => {
     try {
-      await axios.delete(`http://192.168.56.1:3000/api/users/${userId}`);
+      await axios.delete(`http://192.168.56.1/api/users/${userId}`);
       setUsers(users.filter((u) => u.ID !== userId));
       Alert.alert('Success', 'User deleted successfully.');
     } catch (error) {

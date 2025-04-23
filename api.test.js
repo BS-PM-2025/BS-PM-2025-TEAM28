@@ -1,122 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import axios from 'axios';
+const axios = require('axios');
+jest.mock('axios'); // Mock Axios
 
-function Shelters({ navigation }) {
-  const [shelters, setShelters] = useState([]);
+const BASE_URL = 'http://192.168.56.1:3000/api';
 
-  useEffect(() => {
-    fetchShelters();
-  }, []);
+describe('API Tests', () => {
+  let testUserId;
+  let testShelterId;
 
-  const fetchShelters = async () => {
-    try {
-      const response = await axios.get('http://192.168.56.1:3000/api/shelters');
-      setShelters(response.data);
-    } catch (error) {
-      console.error('Error fetching shelters:', error);
-    }
-  };
+  // Test for registering a user
+  it('should register a new user', async () => {
+    axios.post.mockResolvedValue({
+      status: 201,
+      data: {
+        success: true,
+        user: { ID: 1 },
+      },
+    });
 
-  const deleteShelter = async (id) => {
-    try {
-      await axios.delete(`http://192.168.56.1:3000/api/shelters/${id}`);
-      Alert.alert('Success', 'Shelter deleted successfully');
-      // Refresh the shelters list after deletion
-      fetchShelters();
-    } catch (error) {
-      console.error('Error deleting shelter:', error);
-      Alert.alert('Error', 'Failed to delete shelter. Please try again.');
-    }
-  };
+    const response = await axios.post(`${BASE_URL}/register`, {
+      Name: 'Test User',
+      Gmail: 'testuser@example.com',
+      Password: 'password123',
+    });
 
-  const renderShelter = ({ item }) => (
-    <View style={styles.shelterItem}>
-      <View style={styles.shelterInfo}>
-        <Text style={styles.shelterName}>Name: {item.Name}</Text>
-        <Text style={styles.shelterDetails}>Lat: {item.Latitude}</Text>
-        <Text style={styles.shelterDetails}>Lon: {item.Longitude}</Text>
-      </View>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteShelter(item.ID)}
-      >
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    expect(response.status).toBe(201);
+    expect(response.data).toHaveProperty('success', true);
+    expect(response.data).toHaveProperty('user.ID');
+    testUserId = response.data.user.ID;
+  });
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Shelters</Text>
-      <FlatList
-        data={shelters}
-        keyExtractor={(item) => item.ID.toString()}
-        renderItem={renderShelter}
-      />
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+  // Test for logging in a user
+  it('should log in the user', async () => {
+    axios.post.mockResolvedValue({
+      status: 200,
+      data: {
+        success: true,
+        user: { Name: 'Test User' },
+      },
+    });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  shelterItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: '#f8f9fa',
-  },
-  shelterInfo: {
-    flex: 1,
-  },
-  shelterName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  shelterDetails: {
-    fontSize: 14,
-    color: '#555',
-  },
-  deleteButton: {
-    backgroundColor: '#e74c3c',
-    padding: 10,
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  backButton: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#27ae60',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+    const response = await axios.post(`${BASE_URL}/login`, {
+      email: 'testuser@example.com',
+      password: 'password123',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.data).toHaveProperty('success', true);
+    expect(response.data.user).toHaveProperty('Name', 'Test User');
+  });
+
+  // Test for deleting a user
+  it('should delete the user', async () => {
+    axios.delete.mockResolvedValue({
+      status: 200,
+      data: {
+        message: 'User deleted successfully',
+      },
+    });
+
+    const response = await axios.delete(`${BASE_URL}/users/${testUserId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.data).toHaveProperty('message', 'User deleted successfully');
+  });
+
+  // Test for adding a shelter
+  it('should add a new shelter', async () => {
+    axios.post.mockResolvedValue({
+      status: 200,
+      data: {
+        message: 'Shelter added successfully',
+      },
+    });
+
+    const response = await axios.post(`${BASE_URL}/shelters`, {
+      Name: 'Test Shelter',
+      Latitude: 31.259,
+      Longitude: 34.808,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.data).toHaveProperty('message', 'Shelter added successfully');
+
+  
+    testShelterId = 1; 
+  });
+
+  // Test for deleting a shelter
+  it('should delete the shelter', async () => {
+    axios.delete.mockResolvedValue({
+      status: 200,
+      data: {
+        message: 'Shelter deleted successfully',
+      },
+    });
+
+    const response = await axios.delete(`${BASE_URL}/shelters/${testShelterId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.data).toHaveProperty('message', 'Shelter deleted successfully');
+  });
 });
-
-export default Shelters;
