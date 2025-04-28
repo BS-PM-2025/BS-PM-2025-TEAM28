@@ -50,7 +50,7 @@ function Login({ navigation, route }) {
 
     try {
       console.log('Attempting login with:', { email, password });
-      const response = await axios.post('http://192.168.56.1:3000/api/login', {
+      const response = await axios.post('http://10.0.2.2:3000/api/login', {
         email,
         password,
       });

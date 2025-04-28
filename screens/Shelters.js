@@ -13,7 +13,7 @@ function Shelters({ navigation }) {
 
   const fetchShelters = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/shelters');
+      const response = await axios.get('http://10.0.2.2:3000/api/shelters');
       setShelters(response.data);
     } catch (error) {
       console.error('Error fetching shelters:', error);
@@ -29,7 +29,7 @@ function Shelters({ navigation }) {
     }
   
     try {
-      const response = await axios.post('http://192.168.56.1:3000/api/shelters', {
+      const response = await axios.post('http://10.0.2.2:3000/api/shelters', {
         Name: name,
         Latitude: parseFloat(latitude),
         Longitude: parseFloat(longitude),
@@ -62,7 +62,7 @@ function Shelters({ navigation }) {
 
   const deleteShelter = async (id) => {
     try {
-      await axios.delete(`http://192.168.56.1:3000/api/shelters/${id}`);
+      await axios.delete(`http://10.0.2.2:3000/api/shelters/${id}`);
       Alert.alert('Success', 'Shelter deleted successfully');
       fetchShelters(); 
     } catch (error) {

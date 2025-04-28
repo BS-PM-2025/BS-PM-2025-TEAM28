@@ -33,7 +33,7 @@ export default function App() {
       
       if (savedEmail && savedPassword) {
         try {
-          const response = await axios.post('http://192.168.1.140:3000/api/login', {
+          const response = await axios.post('http://10.0.2.2:3000/api/login', {
             email: savedEmail,
             password: savedPassword,
           });
