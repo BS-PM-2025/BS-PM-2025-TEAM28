@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const sql = require('mssql');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
@@ -39,6 +40,29 @@ const createUsersTableIfNotExists = async () => {
     console.log('Users table created or already exists.');
   } catch (err) {
     console.error('Error creating Users table:', err);
+  }
+};
+
+const createSheltersTableIfNotExists = async () => {
+  const query = `
+    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Shelters' AND xtype='U')
+    CREATE TABLE Shelters (
+      ID INT IDENTITY(1,1) PRIMARY KEY,
+      Name NVARCHAR(255) NOT NULL,
+      Address NVARCHAR(255),
+      Latitude DECIMAL(10, 8) NOT NULL,
+      Longitude DECIMAL(11, 8) NOT NULL,
+      Capacity INT,
+      Status NVARCHAR(50) DEFAULT 'Active'
+    );
+  `;
+
+  try {
+    console.log('Creating Shelters table if not exists...');
+    await sql.query(query);
+    console.log('Shelters table created or already exists.');
+  } catch (err) {
+    console.error('Error creating Shelters table:', err);
   }
 };
 
@@ -251,11 +275,24 @@ app.delete('/api/users/:id', async (req, res) => {
 app.get('/api/shelters', async (req, res) => {
   try {
     const request = new sql.Request();
-    const result = await request.query('SELECT * FROM Shelters');
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error('Error fetching shelters:', error);
-    res.status(500).json({ message: 'Failed to fetch shelters' });
+    const result = await request.query(`
+      SELECT ID, Name, Latitude, Longitude
+      FROM [FMS].[dbo].[Shelters]
+    `);
+
+    console.log('Fetched shelters:', result.recordset);
+
+    res.json({ 
+      success: true, 
+      shelters: result.recordset 
+    });
+  } catch (err) {
+    console.error('Error fetching shelters:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch shelters',
+      error: err.message 
+    });
   }
 });
 app.delete('/api/shelters/:id', async (req, res) => {
@@ -377,17 +414,98 @@ app.post('/api/reset-password-with-code', async (req, res) => {
   }
 });
 
+// Directions endpoint
+app.get('/api/directions', async (req, res) => {
+  try {
+    const { origin, destination, mode = 'walking' } = req.query;
+    
+    console.log('\n=== DIRECTIONS REQUEST ===');
+    console.log('Raw origin:', origin);
+    console.log('Raw destination:', destination);
+    console.log('Travel mode:', mode);
+    
+    if (!origin || !destination) {
+      console.log('Missing parameters:', { origin, destination });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Origin and destination are required' 
+      });
+    }
+
+    // Validate travel mode
+    const validModes = ['walking', 'driving', 'transit', 'bicycling'];
+    const travelMode = validModes.includes(mode) ? mode : 'walking';
+
+    // Parse coordinates
+    const [originLat, originLng] = origin.split(',').map(Number);
+    const [destLat, destLng] = destination.split(',').map(Number);
+
+    console.log('\n=== PARSED COORDINATES ===');
+    console.log('Origin:', { lat: originLat, lng: originLng });
+    console.log('Destination:', { lat: destLat, lng: destLng });
+    console.log('Using travel mode:', travelMode);
+
+    if (isNaN(originLat) || isNaN(originLng) || isNaN(destLat) || isNaN(destLng)) {
+      console.error('Invalid coordinate format');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid coordinates format'
+      });
+    }
+
+    console.log('\n=== MAKING GOOGLE MAPS REQUEST ===');
+    const googleMapsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&mode=${travelMode}&key=AIzaSyDbv7vak9FAXNNZTPyqfIaxY9R2TGvy99o&region=il`;
+    console.log('URL:', googleMapsUrl);
+
+    const response = await axios.get(googleMapsUrl);
+    console.log('\n=== GOOGLE MAPS RESPONSE ===');
+    console.log('Status:', response.data.status);
+    
+    if (response.data.status === 'OK') {
+      const route = response.data.routes[0];
+      console.log('\n=== ROUTE DETAILS ===');
+      console.log('Start location:', route.legs[0].start_location);
+      console.log('End location:', route.legs[0].end_location);
+      console.log('Travel mode:', travelMode);
+      console.log('Duration:', route.legs[0].duration.text);
+      
+      res.json({ 
+        success: true, 
+        route: response.data 
+      });
+    } else {
+      console.error('Google Maps API error:', response.data);
+      res.status(400).json({ 
+        success: false, 
+        error: response.data.status,
+        message: response.data.error_message || 'Failed to get directions'
+      });
+    }
+  } catch (error) {
+    console.error('\n=== ERROR ===');
+    console.error('Error details:', error.response?.data || error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch directions',
+      message: error.response?.data?.error_message || error.message
+    });
+  }
+});
+
 const startServer = async () => {
   try {
     await sql.connect(dbConfig);
-    console.log('Connected to SQL Server');
+    console.log('Connected to database');
+    
     await createUsersTableIfNotExists();
-
-    app.listen(3000, '0.0.0.0', () => {
-      console.log('Server running on all interfaces at port 3000');
+    await createSheltersTableIfNotExists();
+    
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
+    console.error('Error starting server:', err);
   }
 };
 

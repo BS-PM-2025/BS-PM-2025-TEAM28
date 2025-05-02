@@ -12,6 +12,14 @@ function HomeScreen({ navigation }) {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
+            style={[styles.button, styles.shelterButton]}
+            onPress={() => navigation.navigate('ShelterMap')}
+          >
+            <MaterialIcons name="location-on" size={24} color="white" />
+            <Text style={styles.buttonText}>Find Closest Shelter</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate('Register')}
           >
@@ -73,6 +81,9 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: '#27ae60',
+  },
+  shelterButton: {
+    backgroundColor: '#e74c3c',
   },
   buttonText: {
     color: 'white',
