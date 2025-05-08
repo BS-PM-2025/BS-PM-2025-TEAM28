@@ -15,6 +15,7 @@ import ResetPassword from './screens/ResetPassword';
 import ManageUsersScreen from './screens/ManageUsersScreen';
 import Shelters from './screens/Shelters';
 import ShelterMapScreen from './screens/ShelterMapScreen';
+import AddressShelterScreen from './screens/AddressShelterScreen';
 
 const Stack = createStackNavigator();
 
@@ -87,7 +88,13 @@ export default function App() {
             title: 'Find Nearest Shelter'
           }}
         />
-        
+        <Stack.Screen 
+          name="AddressShelter" 
+          component={AddressShelterScreen}
+          options={{
+            title: 'Find Shelter by Address'
+          }}
+        />
         <Stack.Screen 
           name="AccountScreen" 
           component={AccountScreen}
