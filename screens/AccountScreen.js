@@ -47,6 +47,14 @@ function AccountScreen({ route, navigation }) {
           <MaterialIcons name="person" size={24} color="#2c3e50" />
           <Text style={styles.infoText}>User Type: {user.UserType}</Text>
         </View>
+
+        <TouchableOpacity 
+          style={styles.shelterButton}
+          onPress={() => navigation.navigate('AddressShelter')}
+        >
+          <MaterialIcons name="location-on" size={24} color="white" />
+          <Text style={styles.shelterButtonText}>Find Shelter by Address</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -90,6 +98,21 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: '#2c3e50',
+  },
+  shelterButton: {
+    backgroundColor: '#e74c3c',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    gap: 10,
+  },
+  shelterButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
