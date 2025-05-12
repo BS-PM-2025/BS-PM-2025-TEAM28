@@ -1,33 +1,22 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:16-alpine'
-        }
+  agent any
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
     }
-    stages {
-        stage('Install Dependencies') {            
-            steps {
-                dir('storage-app') {
-                    sh 'ls'
-                    sh 'npm install'
-                }
+    stage('Install, Test & Build') {
+      steps {
+        dir('storage-app') {
+          script {
+            def nodeImg = 'node:18-alpine'
+            docker.image(nodeImg).inside {
+              sh 'npm ci'
+              sh 'npm test -- --coverage'
+              sh 'CI=false npm run build'
             }
+          }
         }
-        stage('Run Tests') {
-             steps {
-                dir('storage-app') {
-                    sh 'ls'
-                    sh 'npm test -- --coverage'
-                }
-            }
-        }
-        stage('Build and Deploy') {
-            steps {
-                  dir('storage-app') {
-                    sh 'ls'
-                    sh 'CI=false npm run build'
-                }
-            }
-        }
+      }
     }
+  }
 }
