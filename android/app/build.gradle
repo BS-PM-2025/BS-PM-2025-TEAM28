@@ -108,11 +108,9 @@ android {
 }
 
 dependencies {
-    // Add these lines for Google Maps
-    implementation 'com.google.android.gms:play-services-base:18.2.0'
-    implementation 'com.google.android.gms:play-services-maps:18.2.0'
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
-    
+    // React Native dependencies
+    implementation 'com.facebook.react:react-native'
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
@@ -123,4 +121,9 @@ dependencies {
     }
 }
 
+project.ext.vectoricons = [
+    iconFontNames: [ 'MaterialIcons.ttf' ]
+]
+
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+

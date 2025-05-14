@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, PermissionsAndroid } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import Geolocation from '@react-native-community/geolocation';
+import AddressAutocomplete from '../components/AddressAutocomplete';
 
 function AddressShelterScreen({ navigation }) {
+  const mapRef = useRef(null);
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState({
@@ -53,61 +56,45 @@ function AddressShelterScreen({ navigation }) {
     return value * Math.PI / 180;
   };
 
-  const handleSearch = async () => {
-    if (!address.trim()) {
-      Alert.alert('Error', 'Please enter an address');
-      return;
-    }
+  const handleAddressSelect = ({ address, location }) => {
+    setAddress(address);
+    setAddressLocation(location);
+    setRegion({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.0222,
+      longitudeDelta: 0.0121,
+    });
+    
+    // Fetch shelters after address selection
+    fetchShelters(location);
+  };
 
+  const fetchShelters = async (location) => {
     setLoading(true);
     try {
-      // First, get the coordinates for the address
-      const geocodeResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=AIzaSyDbv7vak9FAXNNZTPyqfIaxY9R2TGvy99o`
-      );
+      const sheltersResponse = await axios.get('http://10.0.2.2:3000/api/shelters');
+      if (sheltersResponse.data.success && sheltersResponse.data.shelters) {
+        const formattedShelters = sheltersResponse.data.shelters.map(shelter => ({
+          ...shelter,
+          Latitude: parseFloat(shelter.Latitude),
+          Longitude: parseFloat(shelter.Longitude)
+        }));
+        setShelters(formattedShelters);
 
-      if (geocodeResponse.data.results && geocodeResponse.data.results.length > 0) {
-        const location = geocodeResponse.data.results[0].geometry.location;
-        const addressLoc = {
-          latitude: location.lat,
-          longitude: location.lng
-        };
-        setAddressLocation(addressLoc);
-
-        // Update map region to show the address location
-        setRegion({
-          latitude: location.lat,
-          longitude: location.lng,
-          latitudeDelta: 0.0222,
-          longitudeDelta: 0.0121,
-        });
-
-        // Fetch shelters
-        const sheltersResponse = await axios.get('http://10.0.2.2:3000/api/shelters');
-        if (sheltersResponse.data.success && sheltersResponse.data.shelters) {
-          const formattedShelters = sheltersResponse.data.shelters.map(shelter => ({
-            ...shelter,
-            Latitude: parseFloat(shelter.Latitude),
-            Longitude: parseFloat(shelter.Longitude)
-          }));
-          setShelters(formattedShelters);
-
-          // Find nearest shelter
-          const nearest = findNearestShelter(addressLoc, formattedShelters);
-          if (nearest) {
-            setSelectedShelter(nearest);
-            fetchRoute(addressLoc, {
-              latitude: parseFloat(nearest.Latitude),
-              longitude: parseFloat(nearest.Longitude)
-            });
-          }
+        // Find nearest shelter
+        const nearest = findNearestShelter(location, formattedShelters);
+        if (nearest) {
+          setSelectedShelter(nearest);
+          fetchRoute(location, {
+            latitude: parseFloat(nearest.Latitude),
+            longitude: parseFloat(nearest.Longitude)
+          });
         }
-      } else {
-        Alert.alert('Error', 'Could not find the address');
       }
     } catch (error) {
       console.error('Error:', error);
-      Alert.alert('Error', 'Failed to process the address');
+      Alert.alert('Error', 'Failed to fetch shelters');
     } finally {
       setLoading(false);
     }
@@ -189,9 +176,9 @@ function AddressShelterScreen({ navigation }) {
     if (match) {
       const minutes = parseInt(match[0]);
       if (minutes === 1) {
-        return 'דקה אחת';
+        return '1 minute';
       } else {
-        return `${minutes} דקות`;
+        return `${minutes} minutes`;
       }
     }
     return duration;
@@ -202,36 +189,132 @@ function AddressShelterScreen({ navigation }) {
     const mMatch = distance.match(/(\d+)\s*m/);
     
     if (kmMatch) {
-      return `${kmMatch[1]} ק"מ`;
+      return `${kmMatch[1]} km`;
     } else if (mMatch) {
-      return `${mMatch[1]} מטר`;
+      // Convert meters to kilometers if over 1000m, otherwise show meters
+      const meters = parseInt(mMatch[1]);
+      if (meters >= 1000) {
+        return `${(meters / 1000).toFixed(2)} km`;
+      } else {
+        return `${meters} m`;
+      }
     }
     return distance;
+  };
+
+  const handleZoomIn = () => {
+    if (mapRef.current) {
+      const newDelta = Math.max(region.latitudeDelta * 0.7, 0.002); // Prevent over-zooming
+      const newRegion = {
+        ...region,
+        latitudeDelta: newDelta,
+        longitudeDelta: newDelta * 0.5,
+      };
+      setRegion(newRegion);
+      mapRef.current.animateToRegion(newRegion, 300);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef.current) {
+      const newDelta = Math.min(region.latitudeDelta * 1.3, 0.1); // Limit max zoom out
+      const newRegion = {
+        ...region,
+        latitudeDelta: newDelta,
+        longitudeDelta: newDelta * 0.5,
+      };
+      setRegion(newRegion);
+      mapRef.current.animateToRegion(newRegion, 300);
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Precise Location Permission',
+            message: 'This app needs access to your precise location to find the nearest shelter.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.error('Error requesting location permission:', err);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const getCurrentLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      Alert.alert('הרשאה נדחתה', 'נדרשת הרשאת מיקום כדי להציג את מיקומך על המפה.');
+      return;
+    }
+
+    const config = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 5000,
+      distanceFilter: 5,
+      useSignificantChanges: false,
+      interval: 1000,
+      fastestInterval: 1000
+    };
+
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const userLoc = { latitude, longitude };
+        setAddressLocation(userLoc);
+        
+        const zoomLevel = 0.008;
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: zoomLevel,
+          longitudeDelta: zoomLevel * 0.5,
+        });
+
+        if (shelters.length > 0) {
+          const nearest = findNearestShelter(userLoc, shelters);
+          if (nearest) {
+            setSelectedShelter(nearest);
+            fetchRoute(userLoc, {
+              latitude: parseFloat(nearest.Latitude),
+              longitude: parseFloat(nearest.Longitude)
+            });
+          }
+        }
+      },
+      (error) => {
+        console.error('Location error:', error);
+        Alert.alert(
+          'שגיאת מיקום',
+          'לא הצלחנו לקבל את מיקומך. אנא ודא שהגישה למיקום מופעלת.'
+        );
+      },
+      config
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter address"
-          value={address}
-          onChangeText={setAddress}
+        <AddressAutocomplete
+          onSelectAddress={handleAddressSelect}
+          placeholder="Enter address..."
         />
-        <TouchableOpacity 
-          style={styles.searchButton}
-          onPress={handleSearch}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <MaterialIcons name="search" size={24} color="white" />
-          )}
-        </TouchableOpacity>
+        {loading && <ActivityIndicator style={styles.loader} />}
       </View>
 
       <MapView
+        ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         region={region}
@@ -269,14 +352,36 @@ function AddressShelterScreen({ navigation }) {
         )}
       </MapView>
 
+      <View style={styles.zoomButtonsContainer}>
+        <TouchableOpacity 
+          style={styles.zoomButton}
+          onPress={handleZoomIn}
+        >
+          <MaterialIcons name="add" size={28} color="#333" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.zoomButton}
+          onPress={handleZoomOut}
+        >
+          <MaterialIcons name="remove" size={28} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity 
+        style={styles.myLocationButton}
+        onPress={getCurrentLocation}
+      >
+        <MaterialIcons name="my-location" size={28} color="#e74c3c" />
+      </TouchableOpacity>
+
       {routeInfo && selectedShelter && (
         <View style={styles.routeInfoContainer}>
           <Text style={styles.shelterName}>מקלט {selectedShelter.Name}</Text>
           <View style={styles.routeDetailsContainer}>
             <MaterialIcons name="directions-walk" size={24} color="#333" style={styles.routeIcon} />
             <View>
-              <Text style={styles.routeInfoText}>מרחק: {routeInfo.distance}</Text>
-              <Text style={styles.routeInfoText}>זמן הליכה: {routeInfo.duration}</Text>
+              <Text style={styles.routeInfoText}>Distance: {routeInfo.distance}</Text>
+              <Text style={styles.routeInfoText}>Estimated walking time: {routeInfo.duration}</Text>
             </View>
           </View>
         </View>
@@ -294,11 +399,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     backgroundColor: '#fff',
-    elevation: 2,
+    elevation: 1000,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    zIndex: 1000,
   },
   input: {
     flex: 1,
@@ -354,6 +460,50 @@ const styles = StyleSheet.create({
   },
   routeIcon: {
     marginLeft: 12,
+  },
+  myLocationButton: {
+    position: 'absolute',
+    right: 20,
+    top: 160,
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1,
+  },
+  zoomButtonsContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 220,
+    backgroundColor: 'transparent',
+    zIndex: 1,
+  },
+  zoomButton: {
+    backgroundColor: 'white',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  loader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
