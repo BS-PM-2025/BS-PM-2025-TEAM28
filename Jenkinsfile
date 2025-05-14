@@ -1,23 +1,32 @@
 pipeline {
-    agent any
-
+    agent {
+        docker {
+            image 'node:18-alpine'
+        }
+    }
     stages {
-        stage('Build') {
+        stage('Install Dependencies') {            
             steps {
-                echo 'Building the project...'
-                sh 'echo Hello from the Build stage!'
+                dir('storage-app') {
+                    sh 'ls'
+                    sh 'npm install'
+                }
             }
         }
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                sh 'echo All tests passed!'
+        stage('Run Tests') {
+             steps {
+                dir('storage-app') {
+                    sh 'ls'
+                    sh 'npm test -- --coverage'
+                }
             }
         }
-        stage('Deploy') {
+        stage('Build and Deploy') {
             steps {
-                echo 'Deploying the app...'
-                sh 'echo Deployment successful!'
+                  dir('storage-app') {
+                    sh 'ls'
+                    sh 'CI=false npm run build'
+                }
             }
         }
     }
