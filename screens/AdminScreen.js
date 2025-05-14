@@ -54,6 +54,13 @@ function AdminScreen({ route, navigation }) {
   <MaterialIcons name="people" size={24} color="white" />
   <Text style={styles.buttonText}>Manage Users</Text>
 </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.button}
+  onPress={() => navigation.navigate('AddressShelter')}
+>
+  <MaterialIcons name="location-on" size={24} color="white" />
+  <Text style={styles.buttonText}>Find Shelter by Address</Text>
+</TouchableOpacity>
       </View>
     </ScrollView>
   );
