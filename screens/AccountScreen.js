@@ -50,6 +50,14 @@ function AccountScreen({ route, navigation }) {
 
         <TouchableOpacity 
           style={styles.shelterButton}
+          onPress={() => navigation.navigate('ShelterMap')}
+        >
+          <MaterialIcons name="my-location" size={24} color="white" />
+          <Text style={styles.shelterButtonText}>Find Closest Shelter</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.blueShelterButton}
           onPress={() => navigation.navigate('AddressShelter')}
         >
           <MaterialIcons name="location-on" size={24} color="white" />
@@ -113,6 +121,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  blueShelterButton: {
+    backgroundColor: '#3498db',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    gap: 10,
   },
 });
 

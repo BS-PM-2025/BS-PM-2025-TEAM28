@@ -326,7 +326,6 @@ app.post('/api/shelters', async (req, res) => {
 });
 //////////////////////////////////////////
 
-
 ///////////reset password ////////////////////////////////////////
 app.post('/api/reset-password', async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;

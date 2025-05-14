@@ -41,7 +41,7 @@ function AddressShelterScreen({ navigation }) {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371; 
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
     const a = 
@@ -191,7 +191,7 @@ function AddressShelterScreen({ navigation }) {
     if (kmMatch) {
       return `${kmMatch[1]} km`;
     } else if (mMatch) {
-      // Convert meters to kilometers if over 1000m, otherwise show meters
+
       const meters = parseInt(mMatch[1]);
       if (meters >= 1000) {
         return `${(meters / 1000).toFixed(2)} km`;
@@ -204,7 +204,7 @@ function AddressShelterScreen({ navigation }) {
 
   const handleZoomIn = () => {
     if (mapRef.current) {
-      const newDelta = Math.max(region.latitudeDelta * 0.7, 0.002); // Prevent over-zooming
+      const newDelta = Math.max(region.latitudeDelta * 0.7, 0.002); // Prevent max zoom in
       const newRegion = {
         ...region,
         latitudeDelta: newDelta,
