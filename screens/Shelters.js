@@ -14,7 +14,7 @@ function Shelters({ navigation }) {
   const fetchShelters = async () => {
     try {
       const response = await axios.get('http://10.0.2.2:3000/api/shelters');
-      setShelters(response.data);
+      setShelters(response.data.shelters);
     } catch (error) {
       console.error('Error fetching shelters:', error);
     }
