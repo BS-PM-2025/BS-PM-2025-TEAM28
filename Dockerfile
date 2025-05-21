@@ -1,28 +1,20 @@
-
-# Use Node.js 18 as the base image
-FROM node:18
+# Use official Node image
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy dependency files first
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy the rest of the application
+# Copy the rest of the project
 COPY . .
 
-# Create placeholder for missing components
-RUN mkdir -p src/components/facility && \
-    echo "export default function FacilityDashboard() { return <div>Facility Dashboard Placeholder</div>; }" > src/components/facility/FacilityDashboard.js
-
-# Build the application (with --force to ignore missing components)
-RUN npm run build -- --force || echo "Build completed with warnings"
-
-# Expose port 3000
+# Expose the port your app runs on
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"] 
+# Start the app
+CMD ["npm", "start"]

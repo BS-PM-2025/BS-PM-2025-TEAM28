@@ -3,15 +3,16 @@ version: '3.8'
 services:
   web:
     build:
-      context: ./fitmap
-      dockerfile: ../Dockerfile
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - ./fitmap:/app
+      - .:/app
       - /app/node_modules
     environment:
       NODE_ENV: development
       REACT_APP_ALLOW_MISSING_COMPONENTS: "true"
+    working_dir: /app
     command: sh -c "npm start || echo 'Application started with missing components'"
     restart: unless-stopped

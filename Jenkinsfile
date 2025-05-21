@@ -12,30 +12,30 @@ pipeline {
 
         stage('Setup Node.js (host)') {
             steps {
-                bat 'node --version'
-                bat 'npm --version'
+                sh 'node --version'
+                sh 'npm --version'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                bat 'npm ci'
+                sh 'npm ci'
             }
         }
 
         stage('Run Tests (Docker + JUnit)') {
             steps {
-                bat "docker pull %NODE_IMAGE%"
+                sh "docker pull ${env.NODE_IMAGE}"
 
-                bat """
-                docker run --rm ^
-                  -e CI=true ^
-                  -e JEST_JUNIT_OUTPUT=/app/junit.xml ^
-                  -v "%cd%":/app ^
-                  -w /app ^
-                  %NODE_IMAGE% ^
+                sh '''
+                docker run --rm \
+                  -e CI=true \
+                  -e JEST_JUNIT_OUTPUT=/app/junit.xml \
+                  -v "$PWD":/app \
+                  -w /app \
+                  node:18-alpine \
                   sh -c "npm run test:ci"
-                """
+                '''
             }
             post {
                 always {
@@ -61,28 +61,28 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t fitmap-app --no-cache -f Dockerfile .'
+                sh 'docker build -t fitmap-app --no-cache -f Dockerfile .'
             }
         }
 
         stage('Run Docker Container') {
             steps {
-                bat 'docker-compose up -d'
-                bat 'powershell -Command "Start-Sleep -Seconds 10"'
-                bat 'docker-compose ps'
+                sh 'docker-compose up -d'
+                sh 'sleep 10'
+                sh 'docker-compose ps'
             }
         }
     }
 
     post {
         always {
-            bat 'docker-compose down'
+            sh 'docker-compose down || true'
             cleanWs()
         }
         success { echo '✅  Pipeline completed successfully!' }
         failure {
             echo '❌  Pipeline failed, dumping logs:'
-            bat 'docker-compose logs'
+            sh 'docker-compose logs || true'
         }
     }
 }
