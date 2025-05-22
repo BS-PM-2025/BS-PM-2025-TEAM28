@@ -42,24 +42,24 @@ function AdminScreen({ route, navigation }) {
         <Text style={styles.sectionTitle}>Admin Controls</Text>
     
         <TouchableOpacity
-  style={styles.button}
+  style={[styles.button, styles.blueButton]}
   onPress={() => navigation.navigate('Shelters')}
 >
   <Text style={styles.buttonText}>Manage Shelters</Text>
 </TouchableOpacity>
         <TouchableOpacity
-  style={styles.button}
+  style={[styles.button, styles.blueButton]}
   onPress={() => navigation.navigate('ManageUsers', { adminId: user.ID })}
 >
   <MaterialIcons name="people" size={24} color="white" />
   <Text style={styles.buttonText}>Manage Users</Text>
 </TouchableOpacity>
         <TouchableOpacity
-  style={styles.button}
+  style={[styles.button, styles.outlineButton]}
   onPress={() => navigation.navigate('AddressShelter')}
 >
-  <MaterialIcons name="location-on" size={24} color="white" />
-  <Text style={styles.buttonText}>Find Shelter by Address</Text>
+  <MaterialIcons name="location-on" size={24} color="#0066e6" />
+  <Text style={styles.outlineButtonText}>Find Shelter by Address</Text>
 </TouchableOpacity>
       </View>
     </ScrollView>
@@ -116,6 +116,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     marginBottom: 15,
+  },
+  blueButton: {
+    backgroundColor: '#0066e6',
+  },
+  outlineButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#0066e6',
+  },
+  outlineButtonText: {
+    color: '#0066e6',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   buttonText: {
     color: '#fff',
