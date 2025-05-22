@@ -42,12 +42,13 @@ function ManageUsersScreen({ navigation, route }) {
             <Text style={styles.userText}>Email: {u.Gmail}</Text>
           </View>
           {u.ID !== adminId && ( 
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => deleteUser(u.ID)}
-            >
-              <MaterialIcons name="delete" size={24} color="white" />
-            </TouchableOpacity>
+           <TouchableOpacity
+  onPress={() => deleteUser(u.ID)}
+  style={{ padding: 10 }}
+  testID={`delete-user-${u.ID}`}
+>
+  <MaterialIcons name="delete" size={24} color="black" />
+</TouchableOpacity>
           )}
         </View>
       ))}

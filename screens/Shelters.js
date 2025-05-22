@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 function Shelters({ navigation }) {
   const [shelters, setShelters] = useState([]);
-  const [newShelter, setNewShelter] = useState({ name: '', latitude: '', longitude: '' });
-  const [showAddPrompt, setShowAddPrompt] = useState(false);
 
   useEffect(() => {
     fetchShelters();
@@ -20,27 +19,14 @@ function Shelters({ navigation }) {
     }
   };
 
-  const addShelter = async () => {
-    const { name, latitude, longitude } = newShelter;
-  
-    if (!name.trim() || !latitude.trim() || !longitude.trim()) {
-      Alert.alert('Error', 'All fields are required');
-      return;
-    }
-  
+  const deleteShelter = async (id) => {
     try {
-      const response = await axios.post('http://10.0.2.2:3000/api/shelters', {
-        Name: name,
-        Latitude: parseFloat(latitude),
-        Longitude: parseFloat(longitude),
-      });
-      Alert.alert('Success', response.data.message);
-      setShowAddPrompt(false);
-      setNewShelter({ name: '', latitude: '', longitude: '' });
-      fetchShelters(); 
+      await axios.delete(`http://10.0.2.2:3000/api/shelters/${id}`);
+      Alert.alert('Success', 'Shelter deleted successfully');
+      fetchShelters();
     } catch (error) {
-      console.error('Error adding shelter:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to add shelter. Please try again.');
+      console.error('Error deleting shelter:', error);
+      Alert.alert('Error', 'Failed to delete shelter. Please try again.');
     }
   };
 
@@ -52,79 +38,37 @@ function Shelters({ navigation }) {
         <Text style={styles.shelterDetails}>Lon: {item.Longitude}</Text>
       </View>
       <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteShelter(item.ID)}
-      >
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
+  onPress={() => deleteShelter(item.ID)}
+  style={{ padding: 10 }}
+  testID={`delete-shelter-${item.ID}`}
+>
+  <Icon name="delete" size={24} color="black" />
+</TouchableOpacity>
     </View>
   );
-
-  const deleteShelter = async (id) => {
-    try {
-      await axios.delete(`http://10.0.2.2:3000/api/shelters/${id}`);
-      Alert.alert('Success', 'Shelter deleted successfully');
-      fetchShelters(); 
-    } catch (error) {
-      console.error('Error deleting shelter:', error);
-      Alert.alert('Error', 'Failed to delete shelter. Please try again.');
-    }
-  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Shelters</Text>
 
-      {/*  Shelter Button */}
       <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setShowAddPrompt(true)}
+        style={[styles.button, styles.blueButton]}
+        onPress={() => navigation.navigate('AddShelter')}
       >
-        <Text style={styles.addButtonText}>Add Shelter</Text>
+        <Text style={styles.buttonText}>Add Shelter</Text>
       </TouchableOpacity>
-
-      {/*  Shelter Prompt */}
-      {showAddPrompt && (
-        <View style={styles.addPrompt}>
-          <TextInput
-            style={styles.input}
-            placeholder="Shelter Name"
-            value={newShelter.name}
-            onChangeText={(text) => setNewShelter({ ...newShelter, name: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Latitude"
-            keyboardType="numeric"
-            value={newShelter.latitude}
-            onChangeText={(text) => setNewShelter({ ...newShelter, latitude: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Longitude"
-            keyboardType="numeric"
-            value={newShelter.longitude}
-            onChangeText={(text) => setNewShelter({ ...newShelter, longitude: text })}
-          />
-          <TouchableOpacity style={styles.saveButton} onPress={addShelter}>
-            <Text style={styles.saveButtonText}>Add</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setShowAddPrompt(false)}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       <FlatList
         data={shelters}
         keyExtractor={(item) => item.ID.toString()}
         renderItem={renderShelter}
       />
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>Back</Text>
+
+      <TouchableOpacity
+        style={[styles.button, styles.outlineButton]}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.outlineButtonText}>Back</Text>
       </TouchableOpacity>
     </View>
   );
@@ -142,53 +86,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  addButton: {
-    backgroundColor: '#3498db',
+  button: {
     padding: 15,
     borderRadius: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    marginBottom: 15,
   },
-  addButtonText: {
+  blueButton: {
+    backgroundColor: '#0066e6',
+  },
+  outlineButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#0066e6',
+  },
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  addPrompt: {
-    backgroundColor: '#f8f9fa',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: '#fff',
-  },
-  saveButton: {
-    backgroundColor: '#27ae60',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    backgroundColor: '#e74c3c',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 14,
+  outlineButtonText: {
+    color: '#0066e6',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   shelterItem: {
@@ -212,28 +133,6 @@ const styles = StyleSheet.create({
   shelterDetails: {
     fontSize: 14,
     color: '#555',
-  },
-  deleteButton: {
-    backgroundColor: '#e74c3c',
-    padding: 10,
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  backButton: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#27ae60',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

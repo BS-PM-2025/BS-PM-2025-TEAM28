@@ -16,6 +16,7 @@ import ManageUsersScreen from './screens/ManageUsersScreen';
 import Shelters from './screens/Shelters';
 import ShelterMapScreen from './screens/ShelterMapScreen';
 import AddressShelterScreen from './screens/AddressShelterScreen';
+import AddShelterScreen from './screens/AddShelterScreen';
 
 const Stack = createStackNavigator();
 
@@ -111,6 +112,7 @@ export default function App() {
           }}
         />
          <Stack.Screen name="Shelters" component={Shelters} />
+         <Stack.Screen name="AddShelter" component={AddShelterScreen} />
         <Stack.Screen 
           name="Settings" 
           component={Settings}
