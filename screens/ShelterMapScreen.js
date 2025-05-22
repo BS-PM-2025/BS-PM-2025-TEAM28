@@ -312,47 +312,62 @@ const ShelterMapScreen = () => {
     let lat = 0;
     let lng = 0;
 
-    while (index < len) {
-      let b;
-      let shift = 0;
-      let result = 0;
+    try {
+      while (index < len) {
+        let b;
+        let shift = 0;
+        let result = 0;
 
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
+        do {
+          b = encoded.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
 
-      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
+        const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lat += dlat;
 
-      shift = 0;
-      result = 0;
+        shift = 0;
+        result = 0;
 
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
+        do {
+          b = encoded.charCodeAt(index++) - 63;
+          result |= (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20);
 
-      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
+        const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lng += dlng;
 
-      const finalLat = lat * 1e-5;
-      const finalLng = lng * 1e-5;
+        const finalLat = lat * 1e-5;
+        const finalLng = lng * 1e-5;
 
-      // Validate coordinates are within reasonable bounds
-      if (finalLat >= 29.5 && finalLat <= 33.3 && finalLng >= 34.2 && finalLng <= 35.9) {
-        poly.push({
-          latitude: finalLat,
-          longitude: finalLng,
-        });
-      } else {
-        console.warn('Invalid coordinate in polyline:', { lat: finalLat, lng: finalLng });
+        if (isValidCoordinate(finalLat, finalLng)) {
+          poly.push({
+            latitude: finalLat,
+            longitude: finalLng,
+          });
+        }
       }
+    } catch (error) {
+      console.error('Error decoding polyline:', error);
+      return [];
     }
 
     return poly;
+  };
+
+  const isValidCoordinate = (lat, lng) => {
+    // Validate coordinates are within reasonable bounds for Israel
+    const isLatValid = lat >= 29.5 && lat <= 33.3;
+    const isLngValid = lng >= 34.2 && lng <= 35.9;
+    
+    if (!isLatValid || !isLngValid) {
+      console.warn('Coordinate out of bounds:', { lat, lng });
+      return false;
+    }
+    
+    return true;
   };
 
   const handleMarkerPress = (shelter) => {
