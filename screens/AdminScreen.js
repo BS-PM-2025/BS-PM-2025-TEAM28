@@ -31,7 +31,7 @@ function AdminScreen({ route, navigation }) {
             <MaterialIcons name="settings" size={24} color="#2c3e50" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
-            <MaterialIcons name="logout" size={24} color="#e74c3c" />
+            <MaterialIcons name="logout" size={24} color="#000000" />
           </TouchableOpacity>
         </View>
       </View>

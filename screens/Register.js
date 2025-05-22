@@ -20,19 +20,58 @@ function Register() {
   const [userType, setUserType] = useState('Resident');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [attemptedRegister, setAttemptedRegister] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
   const navigation = useNavigation();
 
+  // Password requirements
+  const passwordRequirements = [
+    {
+      label: 'At least 8 characters',
+      test: (pw) => pw.length >= 8,
+    },
+    {
+      label: 'At least one uppercase letter',
+      test: (pw) => /[A-Z]/.test(pw),
+    },
+    {
+      label: 'At least one lowercase letter',
+      test: (pw) => /[a-z]/.test(pw),
+    },
+    {
+      label: 'At least one number',
+      test: (pw) => /[0-9]/.test(pw),
+    },
+  ];
+  const unmetRequirements = passwordRequirements.filter(r => !r.test(password));
+  const allFieldsFilled = name && email && password && confirmPassword && userType;
+  const passwordsMatch = password === confirmPassword;
+  const passwordValid = unmetRequirements.length === 0;
+  const canRegister = allFieldsFilled && passwordsMatch && passwordValid;
+
+  // Email validation
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !userType) {
+    setAttemptedRegister(true);
+    if (!allFieldsFilled) {
       Alert.alert('Missing Fields', 'Please fill in all fields');
       return;
     }
-
-    if (password !== confirmPassword) {
+    if (!passwordsMatch) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-
+    if (!passwordValid) {
+      setShowPasswordRequirements(true);
+      return;
+    }
+    setShowPasswordRequirements(false);
     try {
       const response = await axios.post('http://10.0.2.2:3000/api/register', {
         userType,
@@ -41,7 +80,6 @@ function Register() {
         password,
         userType,
       });
-
       if (response.data.success) {
         Alert.alert('Success', 'Registration successful!', [
           {
@@ -60,13 +98,45 @@ function Register() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Register</Text>
 
+      {/* User Type Buttons on top, bold text, blue/gray scheme */}
+      <View style={styles.userTypeButtonsRow}>
+        <TouchableOpacity
+          style={[
+            styles.userTypeButtonBlue,
+            userType === 'Resident' ? styles.userTypeButtonBlueActive : styles.userTypeButtonBlueOutline
+          ]}
+          onPress={() => setUserType('Resident')}
+        >
+          <Text style={[
+            styles.userTypeButtonText,
+            userType === 'Resident' ? styles.userTypeButtonTextActive : styles.userTypeButtonTextOutline
+          ]}>
+            {userType === 'Resident' ? '✓ ' : ''}Resident
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.userTypeButtonBlue,
+            userType === 'Tourist' ? styles.userTypeButtonBlueActive : styles.userTypeButtonBlueOutline
+          ]}
+          onPress={() => setUserType('Tourist')}
+        >
+          <Text style={[
+            styles.userTypeButtonText,
+            userType === 'Tourist' ? styles.userTypeButtonTextActive : styles.userTypeButtonTextOutline
+          ]}>
+            {userType === 'Tourist' ? '✓ ' : ''}Tourist
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Inputs */}
       <TextInput
         style={styles.input}
         placeholder="Name"
         value={name}
         onChangeText={setName}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -74,8 +144,13 @@ function Register() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        onFocus={() => setEmailFocused(true)}
+        onBlur={() => { setEmailFocused(false); setEmailTouched(true); }}
       />
-
+      {/* Show email warning only after blur if not valid and not empty */}
+      {email.length > 0 && !emailValid && emailTouched && (
+        <Text style={styles.requirementUnmet}>Please enter a valid email address.</Text>
+      )}
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -83,6 +158,8 @@ function Register() {
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
+          onFocus={() => { setPasswordFocused(true); setPasswordTouched(true); }}
+          onBlur={() => { setPasswordFocused(false); setPasswordTouched(true); }}
         />
         <TouchableOpacity 
           style={styles.showPasswordButton}
@@ -96,6 +173,20 @@ function Register() {
         </TouchableOpacity>
       </View>
 
+      {/* Show password requirements as hint while typing and not valid, or if touched and not valid */}
+      {password.length > 0 && !passwordValid && (passwordFocused || passwordTouched) && (
+        <View style={styles.requirementsBox}>
+          {passwordRequirements.map((req, idx) => (
+            <Text
+              key={idx}
+              style={req.test(password) ? styles.requirementMet : styles.requirementUnmet}
+            >
+              • {req.label}
+            </Text>
+          ))}
+        </View>
+      )}
+
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -103,6 +194,8 @@ function Register() {
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry={!showConfirmPassword}
+          onFocus={() => setConfirmPasswordFocused(true)}
+          onBlur={() => setConfirmPasswordFocused(false)}
         />
         <TouchableOpacity 
           style={styles.showPasswordButton}
@@ -115,56 +208,18 @@ function Register() {
           />
         </TouchableOpacity>
       </View>
+      {/* Show mismatch hint for confirm password */}
+      {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== password && (
+        <Text style={styles.requirementUnmet}>Passwords do not match.</Text>
+      )}
 
-      <Text style={styles.requirements}>
-        Password must contain:{'\n'}
-        • At least 8 characters{'\n'}
-        • At least one uppercase letter{'\n'}
-        • At least one lowercase letter{'\n'}
-        • At least one number
-      </Text>
-
-      <View style={styles.userTypeContainer}>
-        <Text style={styles.userTypeLabel}>User Type:</Text>
-        <View style={styles.userTypeButtons}>
-          <TouchableOpacity
-            style={[
-              styles.userTypeButton,
-              userType === 'Resident' && styles.selectedUserType,
-            ]}
-            onPress={() => setUserType('Resident')}
-          >
-            <Text
-              style={[
-                styles.userTypeText,
-                userType === 'Resident' && styles.selectedUserTypeText,
-              ]}
-            >
-              Resident
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.userTypeButton,
-              userType === 'Tourist' && styles.selectedUserType,
-            ]}
-            onPress={() => setUserType('Tourist')}
-          >
-            <Text
-              style={[
-                styles.userTypeText,
-                userType === 'Tourist' && styles.selectedUserTypeText,
-              ]}
-            >
-              Tourist
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <MaterialIcons name="person-add" size={24} color="white" />
-        <Text style={styles.buttonText}>Register</Text>
+      <TouchableOpacity
+        style={[styles.buttonBlue, !canRegister && styles.buttonBlueDisabled]}
+        onPress={handleRegister}
+        disabled={!canRegister}
+      >
+        <MaterialIcons name="person-add" size={24} color="#fff" />
+        <Text style={styles.buttonBlueText}>Register</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -188,6 +243,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#2c3e50',
     fontWeight: 'bold',
+  },
+  userTypeButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+    justifyContent: 'center',
+  },
+  userTypeButtonBlue: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 2,
+    marginHorizontal: 2,
+  },
+  userTypeButtonBlueActive: {
+    backgroundColor: '#1565c0',
+    borderColor: '#1565c0',
+  },
+  userTypeButtonBlueOutline: {
+    backgroundColor: '#fff',
+    borderColor: '#1565c0',
+  },
+  userTypeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  userTypeButtonTextActive: {
+    color: '#fff',
+  },
+  userTypeButtonTextOutline: {
+    color: '#1565c0',
   },
   input: {
     borderWidth: 1,
@@ -215,46 +302,23 @@ const styles = StyleSheet.create({
   showPasswordButton: {
     padding: 15,
   },
-  requirements: {
+  requirementsBox: {
     marginTop: 10,
-    color: '#666',
+    marginBottom: 10,
+  },
+  requirementMet: {
+    color: '#888',
     fontSize: 14,
     lineHeight: 20,
   },
-  userTypeContainer: {
-    marginBottom: 20,
+  requirementUnmet: {
+    color: '#1565c0',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: 'bold',
   },
-  userTypeLabel: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#2c3e50',
-  },
-  userTypeButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  userTypeButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'center',
-  },
-  selectedUserType: {
-    backgroundColor: '#27ae60',
-    borderColor: '#27ae60',
-  },
-  userTypeText: {
-    color: '#2c3e50',
-    fontSize: 16,
-  },
-  selectedUserTypeText: {
-    color: '#fff',
-  },
-  button: {
-    backgroundColor: '#27ae60',
+  buttonBlue: {
+    backgroundColor: '#1565c0',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',
@@ -262,11 +326,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     marginTop: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonText: {
+  buttonBlueDisabled: {
+    backgroundColor: '#b0bec5',
+  },
+  buttonBlueText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'normal',
   },
   loginText: {
     marginTop: 20,
