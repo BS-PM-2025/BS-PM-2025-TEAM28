@@ -213,7 +213,6 @@ function Register() {
         onPress={handleRegister}
         disabled={!canRegister}
       >
-        <MaterialIcons name="person-add" size={24} color="#fff" />
         <Text style={styles.buttonBlueText}>Register</Text>
       </TouchableOpacity>
 

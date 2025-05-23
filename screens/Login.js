@@ -125,8 +125,7 @@ function Login({ navigation, route }) {
         <Text style={styles.rememberMeText}>Remember Me</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
-        <MaterialIcons name="login" size={24} color="#fff" />
+     <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
         <Text style={styles.buttonBlueText}>Login</Text>
       </TouchableOpacity>
 
@@ -134,7 +133,6 @@ function Login({ navigation, route }) {
         style={styles.outlineButtonSmall}
         onPress={() => navigation.navigate('ForgotPassword')}
       >
-        <MaterialIcons name="lock-open" size={20} color="#0066e6" />
         <Text style={styles.outlineButtonSmallText}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
