@@ -51,12 +51,13 @@ function Shelters({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Shelters</Text>
 
-      <TouchableOpacity
-        style={[styles.button, styles.blueButton]}
-        onPress={() => navigation.navigate('AddShelter')}
-      >
-        <Text style={styles.buttonText}>Add Shelter</Text>
-      </TouchableOpacity>
+<TouchableOpacity
+  style={[styles.button, styles.blueButton]}
+  onPress={() => navigation.navigate('AddShelter')}
+>
+  <Icon name="add" size={24} color="#fff" style={{ marginRight: 8 }} />
+  <Text style={styles.buttonText}>Add Shelter</Text>
+</TouchableOpacity>
 
       <FlatList
         data={shelters}

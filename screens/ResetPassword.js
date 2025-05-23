@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
@@ -18,11 +19,20 @@ function ResetPassword({ navigation, route }) {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    return passwordRegex.test(password);
-  };
+  const passwordRequirements = [
+    { label: 'At least 8 characters', test: (pw) => pw.length >= 8 },
+    { label: 'At least one uppercase letter', test: (pw) => /[A-Z]/.test(pw) },
+    { label: 'At least one lowercase letter', test: (pw) => /[a-z]/.test(pw) },
+    { label: 'At least one number', test: (pw) => /[0-9]/.test(pw) },
+  ];
+
+  const unmetRequirements = passwordRequirements.filter(r => !r.test(newPassword));
+  const passwordValid = unmetRequirements.length === 0;
+  const passwordsMatch = newPassword === confirmPassword;
 
   const handleResetPassword = async () => {
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
@@ -30,9 +40,9 @@ function ResetPassword({ navigation, route }) {
       return;
     }
 
-    if (!validatePassword(newPassword)) {
+    if (!passwordValid) {
       Alert.alert(
-        'Invalid Password', 
+        'Invalid Password',
         'Password must be at least 8 characters long and contain:\n\n' +
         '• At least one uppercase letter\n' +
         '• At least one lowercase letter\n' +
@@ -41,7 +51,7 @@ function ResetPassword({ navigation, route }) {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (!passwordsMatch) {
       Alert.alert('Error', 'New passwords do not match');
       return;
     }
@@ -57,19 +67,14 @@ function ResetPassword({ navigation, route }) {
         return;
       }
 
-      const response = await axios.post('http://10.0.2.2:3000/api/reset-password', {
+      await axios.post('http://10.0.2.2:3000/api/reset-password', {
         email: user.Gmail,
         currentPassword,
         newPassword,
       });
 
       Alert.alert('Success', 'Password has been reset successfully', [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.goBack();
-          }
-        }
+        { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
       console.error('Password reset error:', error);
@@ -78,10 +83,10 @@ function ResetPassword({ navigation, route }) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <MaterialIcons name="arrow-back" size={24} color="#2c3e50" />
@@ -98,14 +103,14 @@ function ResetPassword({ navigation, route }) {
             onChangeText={setCurrentPassword}
             secureTextEntry={!showCurrentPassword}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.showPasswordButton}
             onPress={() => setShowCurrentPassword(!showCurrentPassword)}
           >
-            <MaterialIcons 
-              name={showCurrentPassword ? "visibility-off" : "visibility"} 
-              size={24} 
-              color="#666" 
+            <MaterialIcons
+              name={showCurrentPassword ? "visibility-off" : "visibility"}
+              size={24}
+              color="#666"
             />
           </TouchableOpacity>
         </View>
@@ -115,20 +120,38 @@ function ResetPassword({ navigation, route }) {
             style={styles.passwordInput}
             placeholder="New Password"
             value={newPassword}
-            onChangeText={setNewPassword}
+            onChangeText={(text) => {
+              setNewPassword(text);
+              setPasswordTouched(true);
+            }}
             secureTextEntry={!showNewPassword}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.showPasswordButton}
             onPress={() => setShowNewPassword(!showNewPassword)}
           >
-            <MaterialIcons 
-              name={showNewPassword ? "visibility-off" : "visibility"} 
-              size={24} 
-              color="#666" 
+            <MaterialIcons
+              name={showNewPassword ? "visibility-off" : "visibility"}
+              size={24}
+              color="#666"
             />
           </TouchableOpacity>
         </View>
+
+        {newPassword.length > 0 && (passwordFocused || passwordTouched) && (
+          <View style={styles.requirementsBox}>
+            {passwordRequirements.map((req, idx) => (
+              <Text
+                key={idx}
+                style={req.test(newPassword) ? styles.requirementMet : styles.requirementUnmet}
+              >
+                {req.test(newPassword) ? '✓' : '•'} {req.label}
+              </Text>
+            ))}
+          </View>
+        )}
 
         <View style={styles.passwordContainer}>
           <TextInput
@@ -137,42 +160,47 @@ function ResetPassword({ navigation, route }) {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
+            onFocus={() => setConfirmPasswordFocused(true)}
+            onBlur={() => setConfirmPasswordFocused(false)}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.showPasswordButton}
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
           >
-            <MaterialIcons 
-              name={showConfirmPassword ? "visibility-off" : "visibility"} 
-              size={24} 
-              color="#666" 
+            <MaterialIcons
+              name={showConfirmPassword ? "visibility-off" : "visibility"}
+              size={24}
+              color="#666"
             />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.requirements}>
-          Password must contain:{'\n'}
-          • At least 8 characters{'\n'}
-          • At least one uppercase letter{'\n'}
-          • At least one lowercase letter{'\n'}
-          • At least one number
-        </Text>
+        {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== newPassword && (
+          <Text style={styles.requirementUnmet}>Passwords do not match.</Text>
+        )}
 
-        <TouchableOpacity 
-          style={styles.button}
+        <TouchableOpacity
+          style={[
+            styles.buttonBlue,
+            (!passwordValid || !passwordsMatch || !currentPassword) && styles.buttonBlueDisabled
+          ]}
           onPress={handleResetPassword}
+          disabled={!passwordValid || !passwordsMatch || !currentPassword}
         >
-          <Text style={styles.buttonText}>Reset Password</Text>
+          <MaterialIcons name="lock-reset" size={24} color="#fff" />
+          <Text style={styles.buttonBlueText}>Reset Password</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#fff',
+    padding: 20,
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -209,24 +237,45 @@ const styles = StyleSheet.create({
   showPasswordButton: {
     padding: 15,
   },
-  button: {
-    backgroundColor: '#27ae60',
+  buttonBlue: {
+    backgroundColor: '#1565c0',
     padding: 15,
     borderRadius: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
     marginTop: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonText: {
+  buttonBlueDisabled: {
+    backgroundColor: '#b0bec5',
+  },
+  buttonBlueText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'normal',
+    marginLeft: 8,
   },
-  requirements: {
+  requirementsBox: {
     marginTop: 10,
-    color: '#666',
+    marginBottom: 10,
+  },
+  requirementMet: {
+    color: '#888',
     fontSize: 14,
     lineHeight: 20,
   },
+  requirementUnmet: {
+    color: '#1565c0',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: 'bold',
+  },
 });
 
-export default ResetPassword; 
+export default ResetPassword;

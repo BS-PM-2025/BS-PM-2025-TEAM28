@@ -1,4 +1,3 @@
-// screens/Login.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -19,12 +18,9 @@ function Login({ navigation, route }) {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // Check for pre-filled email from registration
     if (route.params?.prefillEmail) {
       setEmail(route.params.prefillEmail);
     }
-
-    // Check for saved login credentials
     checkSavedLogin();
   }, []);
 
@@ -49,19 +45,14 @@ function Login({ navigation, route }) {
     }
 
     try {
-      console.log('Attempting login with:', { email, password });
       const response = await axios.post('http://10.0.2.2:3000/api/login', {
         email,
         password,
       });
 
-      console.log('Login response:', response.data);
-
       if (response.data.success) {
         const user = response.data.user;
-        console.log('User data:', user);
-        
-        // Save login credentials if remember me is checked
+
         if (rememberMe) {
           await AsyncStorage.setItem('userEmail', email);
           await AsyncStorage.setItem('userPassword', password);
@@ -70,15 +61,12 @@ function Login({ navigation, route }) {
           await AsyncStorage.removeItem('userPassword');
         }
 
-        // Navigate based on user type
         if (user.IsAdmin) {
-          console.log('Navigating to AdminScreen');
           navigation.reset({
             index: 0,
             routes: [{ name: 'AdminScreen', params: { user } }],
           });
         } else {
-          console.log('Navigating to AccountScreen');
           navigation.reset({
             index: 0,
             routes: [{ name: 'AccountScreen', params: { user } }],
@@ -88,7 +76,6 @@ function Login({ navigation, route }) {
         Alert.alert('Login Failed', response.data.message || 'Invalid credentials');
       }
     } catch (error) {
-      
       Alert.alert('Error', error.response?.data?.message || 'Failed to log in');
     }
   };
@@ -138,13 +125,17 @@ function Login({ navigation, route }) {
         <Text style={styles.rememberMeText}>Remember Me</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <MaterialIcons name="login" size={24} color="white" />
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
+        <MaterialIcons name="login" size={24} color="#fff" />
+        <Text style={styles.buttonBlueText}>Login</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-        <Text style={styles.forgotPassword}>Forgot Password?</Text>
+      <TouchableOpacity
+        style={styles.outlineButtonSmall}
+        onPress={() => navigation.navigate('ForgotPassword')}
+      >
+        <MaterialIcons name="lock-open" size={20} color="#0066e6" />
+        <Text style={styles.outlineButtonSmallText}>Forgot Password?</Text>
       </TouchableOpacity>
     </View>
   );
@@ -200,25 +191,43 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     fontSize: 16,
   },
-  button: {
-    backgroundColor: '#27ae60',
+  buttonBlue: {
+    backgroundColor: '#1565c0',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    marginTop: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  buttonText: {
+  buttonBlueText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'normal',
   },
-  forgotPassword: {
-    color: '#2c3e50',
+  outlineButtonSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0066e6',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     marginTop: 15,
-    textAlign: 'center',
+    alignSelf: 'center',
+  },
+  outlineButtonSmallText: {
+    color: '#0066e6',
     fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 6,
   },
 });
 
