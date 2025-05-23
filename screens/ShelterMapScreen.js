@@ -473,7 +473,7 @@ const ShelterMapScreen = () => {
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={region}
-        showsUserLocation={true}
+        showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={true}
         loadingEnabled={true}
@@ -498,17 +498,33 @@ const ShelterMapScreen = () => {
           },
         ]}
       >
-        {shelters.map((shelter) => (
+        {userLocation && (
           <Marker
+            coordinate={userLocation}
+            anchor={{ x: 0.5, y: 0.5 }} // Centers the icon on the coordinate
+            flat={true} // Ensures the icon is rendered as a flat 2D image
+            zIndex={5} // To ensure it's suitably layered (e.g., above polylines)
+          >
+            <View style={styles.userLocationOuterCircle}>
+              <View style={styles.userLocationInnerCircle} />
+            </View>
+          </Marker>
+        )}
+        {shelters.map((shelter) => (
+          
+          <Marker
+          
             key={shelter.ID}
             coordinate={{
               latitude: parseFloat(shelter.Latitude),
               longitude: parseFloat(shelter.Longitude),
             }}
+            
             title={`מקלט ${shelter.Name}`}
             onPress={() => handleMarkerPress(shelter)}
             pinColor= "#0051D1"
           >
+            
             {selectedShelter && selectedShelter.ID === shelter.ID && (
               <Icon 
                 name="location-on" 
@@ -518,15 +534,16 @@ const ShelterMapScreen = () => {
               />
             )}
           </Marker>
+          
         ))}
         {route && (
-          <Polyline
-            coordinates={route}
-            strokeWidth={5}
-            strokeColor="#4285F4"
-            zIndex={2}
-          />
-        )}
+            <Polyline
+              coordinates={route}
+              strokeWidth={5}
+              strokeColor="#4285F4"
+              zIndex={2}
+            />
+          )}
       </MapView>
       
       <View style={styles.zoomButtonsContainer}>
@@ -574,6 +591,27 @@ const ShelterMapScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  userLocationOuterCircle: { // This view creates the white stroke and applies shadow
+    width: 22, // Total diameter of the marker (inner blue + white stroke)
+    height: 22,
+    borderRadius: 11, // Half of the width/height to make it a circle
+    backgroundColor: 'white', // This will be the color of the stroke
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow properties for iOS
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 }, // Centered shadow
+    shadowOpacity: 0.4, // How transparent the shadow is
+    shadowRadius: 3,   // How blurred the shadow is
+    // Elevation for Android shadow
+    elevation: 4,
+  },
+  userLocationInnerCircle: { // This view is the main blue filled circle
+    width: 16, // Diameter of the inner blue circle
+    height: 16,
+    borderRadius: 8, // Half of its width/height
+    backgroundColor: '#6F9CDE', // The specified blue color for the user location
+  },
   // ... other styles ...
   container: {
     flex: 1,
