@@ -579,7 +579,7 @@ const ShelterMapScreen = () => {
                 {routeInfo.distance}
               </Text>
               <Text style={styles.routeInfoText}>
-                <Text style={{fontWeight: 'bold'}}>זמן הליכה : </Text>
+                <Text style={{fontWeight: 'bold'}}>זמן הליכה משוער : </Text>
                 {routeInfo.duration}
               </Text>
             </View>
