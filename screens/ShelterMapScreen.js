@@ -312,62 +312,47 @@ const ShelterMapScreen = () => {
     let lat = 0;
     let lng = 0;
 
-    try {
-      while (index < len) {
-        let b;
-        let shift = 0;
-        let result = 0;
+    while (index < len) {
+      let b;
+      let shift = 0;
+      let result = 0;
 
-        do {
-          b = encoded.charCodeAt(index++) - 63;
-          result |= (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20);
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
 
-        const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-        lat += dlat;
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
 
-        shift = 0;
-        result = 0;
+      shift = 0;
+      result = 0;
 
-        do {
-          b = encoded.charCodeAt(index++) - 63;
-          result |= (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20);
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
 
-        const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-        lng += dlng;
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
 
-        const finalLat = lat * 1e-5;
-        const finalLng = lng * 1e-5;
+      const finalLat = lat * 1e-5;
+      const finalLng = lng * 1e-5;
 
-        if (isValidCoordinate(finalLat, finalLng)) {
-          poly.push({
-            latitude: finalLat,
-            longitude: finalLng,
-          });
-        }
+      // Validate coordinates are within reasonable bounds
+      if (finalLat >= 29.5 && finalLat <= 33.3 && finalLng >= 34.2 && finalLng <= 35.9) {
+        poly.push({
+          latitude: finalLat,
+          longitude: finalLng,
+        });
+      } else {
+        console.warn('Invalid coordinate in polyline:', { lat: finalLat, lng: finalLng });
       }
-    } catch (error) {
-      console.error('Error decoding polyline:', error);
-      return [];
     }
 
     return poly;
-  };
-
-  const isValidCoordinate = (lat, lng) => {
-    // Validate coordinates are within reasonable bounds for Israel
-    const isLatValid = lat >= 29.5 && lat <= 33.3;
-    const isLngValid = lng >= 34.2 && lng <= 35.9;
-    
-    if (!isLatValid || !isLngValid) {
-      console.warn('Coordinate out of bounds:', { lat, lng });
-      return false;
-    }
-    
-    return true;
   };
 
   const handleMarkerPress = (shelter) => {
@@ -488,7 +473,7 @@ const ShelterMapScreen = () => {
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={region}
-        showsUserLocation={true}
+        showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={true}
         loadingEnabled={true}
@@ -513,25 +498,52 @@ const ShelterMapScreen = () => {
           },
         ]}
       >
-        {shelters.map((shelter) => (
+        {userLocation && (
           <Marker
+            coordinate={userLocation}
+            anchor={{ x: 0.5, y: 0.5 }} // Centers the icon on the coordinate
+            flat={true} // Ensures the icon is rendered as a flat 2D image
+            zIndex={5} // To ensure it's suitably layered (e.g., above polylines)
+          >
+            <View style={styles.userLocationOuterCircle}>
+              <View style={styles.userLocationInnerCircle} />
+            </View>
+          </Marker>
+        )}
+        {shelters.map((shelter) => (
+          
+          <Marker
+          
             key={shelter.ID}
             coordinate={{
               latitude: parseFloat(shelter.Latitude),
               longitude: parseFloat(shelter.Longitude),
             }}
+            
             title={`מקלט ${shelter.Name}`}
             onPress={() => handleMarkerPress(shelter)}
-          />
+            pinColor= "#0051D1"
+          >
+            
+            {selectedShelter && selectedShelter.ID === shelter.ID && (
+              <Icon 
+                name="location-on" 
+                size={40}
+                color="#E53935" 
+                style={{marginBottom: 40}}
+              />
+            )}
+          </Marker>
+          
         ))}
         {route && (
-          <Polyline
-            coordinates={route}
-            strokeWidth={4}
-            strokeColor="#4285F4"
-            zIndex={2}
-          />
-        )}
+            <Polyline
+              coordinates={route}
+              strokeWidth={5}
+              strokeColor="#4285F4"
+              zIndex={2}
+            />
+          )}
       </MapView>
       
       <View style={styles.zoomButtonsContainer}>
@@ -562,8 +574,14 @@ const ShelterMapScreen = () => {
           <View style={styles.routeDetailsContainer}>
             <Icon name="directions-walk" size={24} color="#333" style={styles.routeIcon} />
             <View>
-              <Text style={styles.routeInfoText}>מרחק: {routeInfo.distance}</Text>
-              <Text style={styles.routeInfoText}>זמן הליכה: {routeInfo.duration}</Text>
+              <Text style={styles.routeInfoText}>
+                <Text style={{fontWeight: 'bold'}}>מרחק : </Text>
+                {routeInfo.distance}
+              </Text>
+              <Text style={styles.routeInfoText}>
+                <Text style={{fontWeight: 'bold'}}>זמן הליכה משוער : </Text>
+                {routeInfo.duration}
+              </Text>
             </View>
           </View>
         </View>
@@ -573,6 +591,28 @@ const ShelterMapScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  userLocationOuterCircle: { // This view creates the white stroke and applies shadow
+    width: 22, // Total diameter of the marker (inner blue + white stroke)
+    height: 22,
+    borderRadius: 11, // Half of the width/height to make it a circle
+    backgroundColor: 'white', // This will be the color of the stroke
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow properties for iOS
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 }, // Centered shadow
+    shadowOpacity: 0.4, // How transparent the shadow is
+    shadowRadius: 3,   // How blurred the shadow is
+    // Elevation for Android shadow
+    elevation: 4,
+  },
+  userLocationInnerCircle: { // This view is the main blue filled circle
+    width: 16, // Diameter of the inner blue circle
+    height: 16,
+    borderRadius: 8, // Half of its width/height
+    backgroundColor: '#6F9CDE', // The specified blue color for the user location
+  },
+  // ... other styles ...
   container: {
     flex: 1,
   },
@@ -653,9 +693,9 @@ const styles = StyleSheet.create({
   routeIcon: {
     marginLeft: 12,
   },
-  zoomButtonsContainer: {
+  zoomButtonsContainer: { // MODIFIED PART
     position: 'absolute',
-    right: 20,
+    right: 26, // <--- THIS IS THE CHANGE
     top: 80,
     backgroundColor: 'transparent',
     zIndex: 1,
@@ -676,4 +716,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShelterMapScreen; 
+export default ShelterMapScreen;
