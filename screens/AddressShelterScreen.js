@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, PermissionsAndroid } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
@@ -21,6 +21,19 @@ function AddressShelterScreen({ navigation }) {
   const [route, setRoute] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const [addressLocation, setAddressLocation] = useState(null);
+
+  useEffect(() => {
+    if (selectedShelter && addressLocation) {
+      // Delay route fetching to allow UI to update marker color
+      const timeout = setTimeout(() => {
+        fetchRoute(addressLocation, {
+          latitude: parseFloat(selectedShelter.Latitude),
+          longitude: parseFloat(selectedShelter.Longitude)
+        });
+      }, 50); // 50ms delay for UI update
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedShelter, addressLocation]);
 
   const findNearestShelter = (location, shelterList) => {
     if (!location || !shelterList || shelterList.length === 0) return null;
@@ -176,9 +189,9 @@ function AddressShelterScreen({ navigation }) {
     if (match) {
       const minutes = parseInt(match[0]);
       if (minutes === 1) {
-        return '1 minute';
+        return 'דקה';
       } else {
-        return `${minutes} minutes`;
+        return `${minutes} דקות`;
       }
     }
     return duration;
@@ -189,14 +202,13 @@ function AddressShelterScreen({ navigation }) {
     const mMatch = distance.match(/(\d+)\s*m/);
     
     if (kmMatch) {
-      return `${kmMatch[1]} km`;
+      return `${kmMatch[1]} ק"מ`;
     } else if (mMatch) {
-
       const meters = parseInt(mMatch[1]);
       if (meters >= 1000) {
-        return `${(meters / 1000).toFixed(2)} km`;
+        return `${(meters / 1000).toFixed(2)} ק"מ`;
       } else {
-        return `${meters} m`;
+        return `${meters} מ'`;
       }
     }
     return distance;
@@ -327,21 +339,33 @@ function AddressShelterScreen({ navigation }) {
         {addressLocation && (
           <Marker
             coordinate={addressLocation}
-            title="Your Location"
-            pinColor="blue"
-          />
+            anchor={{ x: 0.5, y: 0.5 }} 
+            flat={true} 
+            zIndex={5} 
+          >
+            <View style={styles.userLocationOuterCircle}>
+              <View style={styles.userLocationInnerCircle} />
+            </View>
+          </Marker>
         )}
-        {shelters.map((shelter) => (
-          <Marker
-            key={shelter.ID}
-            coordinate={{
-              latitude: parseFloat(shelter.Latitude),
-              longitude: parseFloat(shelter.Longitude),
-            }}
-            title={`מקלט ${shelter.Name}`}
-            pinColor={selectedShelter?.ID === shelter.ID ? "red" : "green"}
-          />
-        ))}
+        {shelters.map((shelter) => {
+          const isSelected = selectedShelter && String(selectedShelter.ID) === String(shelter.ID);
+          console.log('Comparing', String(selectedShelter?.ID), 'to', String(shelter.ID), '=>', isSelected);
+          return (
+            <Marker
+              key={`${shelter.ID}-${isSelected}`}
+              coordinate={{
+                latitude: parseFloat(shelter.Latitude),
+                longitude: parseFloat(shelter.Longitude),
+              }}
+              title={`מקלט ${shelter.Name}`}
+              pinColor={isSelected ? "#E53935" : "#0055D1"}
+              onPress={() => {
+                setSelectedShelter(shelter);
+              }}
+            />
+          );
+        })}
         {route && (
           <Polyline
             coordinates={route}
@@ -352,27 +376,26 @@ function AddressShelterScreen({ navigation }) {
         )}
       </MapView>
 
-      <View style={styles.zoomButtonsContainer}>
+      <View style={styles.fabContainer}>
         <TouchableOpacity 
-          style={styles.zoomButton}
+          style={styles.fabButton}
+          onPress={getCurrentLocation}
+        >
+          <MaterialIcons name="my-location" size={28} color="#e74c3c" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.fabButton}
           onPress={handleZoomIn}
         >
           <MaterialIcons name="add" size={28} color="#333" />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.zoomButton}
+          style={styles.fabButton}
           onPress={handleZoomOut}
         >
           <MaterialIcons name="remove" size={28} color="#333" />
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity 
-        style={styles.myLocationButton}
-        onPress={getCurrentLocation}
-      >
-        <MaterialIcons name="my-location" size={28} color="#e74c3c" />
-      </TouchableOpacity>
 
       {routeInfo && selectedShelter && (
         <View style={styles.routeInfoContainer}>
@@ -380,8 +403,8 @@ function AddressShelterScreen({ navigation }) {
           <View style={styles.routeDetailsContainer}>
             <MaterialIcons name="directions-walk" size={24} color="#333" style={styles.routeIcon} />
             <View>
-              <Text style={styles.routeInfoText}>Distance: {routeInfo.distance}</Text>
-              <Text style={styles.routeInfoText}>Estimated walking time: {routeInfo.duration}</Text>
+              <Text style={styles.routeInfoText}><Text style={styles.routeInfoLabel}>מרחק :</Text> {routeInfo.distance}</Text>
+              <Text style={styles.routeInfoText}><Text style={styles.routeInfoLabel}>זמן הליכה משוער :</Text> {routeInfo.duration}</Text>
             </View>
           </View>
         </View>
@@ -391,6 +414,27 @@ function AddressShelterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  userLocationOuterCircle: { // This view creates the white stroke and applies shadow
+    width: 22, //
+    height: 22,
+    borderRadius: 11, 
+    backgroundColor: 'white', // color of the stroke
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow properties for iOS
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 }, 
+    shadowOpacity: 0.4, 
+    shadowRadius: 3,   
+    
+    elevation: 4,
+  },
+  userLocationInnerCircle: { 
+    width: 16, 
+    height: 16,
+    borderRadius: 8, 
+    backgroundColor: '#6F9CDE', // 
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -461,35 +505,21 @@ const styles = StyleSheet.create({
   routeIcon: {
     marginLeft: 12,
   },
-  myLocationButton: {
+  fabContainer: {
     position: 'absolute',
     right: 20,
     top: 160,
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 1,
+    zIndex: 2,
+    alignItems: 'center',
   },
-  zoomButtonsContainer: {
-    position: 'absolute',
-    right: 20,
-    top: 220,
-    backgroundColor: 'transparent',
-    zIndex: 1,
-  },
-  zoomButton: {
+  fabButton: {
     backgroundColor: 'white',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -504,6 +534,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  routeInfoLabel: {
+    fontWeight: 'bold',
+    color: '#666',
   },
 });
 
