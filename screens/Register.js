@@ -98,7 +98,6 @@ function Register() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Register</Text>
 
-      {/* User Type Buttons on top, bold text, blue/gray scheme */}
       <View style={styles.userTypeButtonsRow}>
         <TouchableOpacity
           style={[
@@ -130,7 +129,6 @@ function Register() {
         </TouchableOpacity>
       </View>
 
-      {/* Inputs */}
       <TextInput
         style={styles.input}
         placeholder="Name"
@@ -147,7 +145,6 @@ function Register() {
         onFocus={() => setEmailFocused(true)}
         onBlur={() => { setEmailFocused(false); setEmailTouched(true); }}
       />
-      {/* Show email warning only after blur if not valid and not empty */}
       {email.length > 0 && !emailValid && emailTouched && (
         <Text style={styles.requirementUnmet}>Please enter a valid email address.</Text>
       )}
@@ -173,7 +170,6 @@ function Register() {
         </TouchableOpacity>
       </View>
 
-      {/* Show password requirements as hint while typing and not valid, or if touched and not valid */}
       {password.length > 0 && !passwordValid && (passwordFocused || passwordTouched) && (
         <View style={styles.requirementsBox}>
           {passwordRequirements.map((req, idx) => (
@@ -208,7 +204,6 @@ function Register() {
           />
         </TouchableOpacity>
       </View>
-      {/* Show mismatch hint for confirm password */}
       {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== password && (
         <Text style={styles.requirementUnmet}>Passwords do not match.</Text>
       )}
@@ -259,12 +254,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   userTypeButtonBlueActive: {
-    backgroundColor: '#1565c0',
-    borderColor: '#1565c0',
+    backgroundColor: '#0066e6',
+    borderColor: '#0066e6',
   },
   userTypeButtonBlueOutline: {
     backgroundColor: '#fff',
-    borderColor: '#1565c0',
+    borderColor: '#0066e6',
   },
   userTypeButtonText: {
     fontSize: 16,
@@ -274,7 +269,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   userTypeButtonTextOutline: {
-    color: '#1565c0',
+    color: '#0066e6',
   },
   input: {
     borderWidth: 1,
@@ -312,13 +307,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   requirementUnmet: {
-    color: '#1565c0',
+    color: '#0066e6',
     fontSize: 14,
     lineHeight: 20,
     fontWeight: 'bold',
   },
   buttonBlue: {
-    backgroundColor: '#1565c0',
+    backgroundColor: '#0066e6',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',

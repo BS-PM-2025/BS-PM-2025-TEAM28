@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   requirementUnmet: {
-    color: '#1565c0',
+    color: '#0066e6',
     fontSize: 14,
     lineHeight: 20,
     fontWeight: 'bold',
   },
   buttonBlue: {
-    backgroundColor: '#1565c0',
+    backgroundColor: '#0066e6',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',

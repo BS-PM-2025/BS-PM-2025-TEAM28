@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonBlue: {
-    backgroundColor: '#1565c0',
+    backgroundColor: '#0066e6',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',
