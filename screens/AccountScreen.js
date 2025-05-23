@@ -1,8 +1,10 @@
 // screens/AccountScreen.js
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const shieldLogo = require('../assets/shield.png');
 
 function AccountScreen({ route, navigation }) {
   const { user } = route.params;
@@ -62,6 +64,18 @@ function AccountScreen({ route, navigation }) {
         >
           <MaterialIcons name="location-on" size={24} color="white" />
           <Text style={styles.shelterButtonText}>Find Shelter by Address</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.blueButton]}
+          onPress={() => navigation.navigate('Shelters')}
+        >
+          <Image
+            source={shieldLogo}
+            style={{ width: 24, height: 24, marginRight: 10 }}
+            resizeMode="contain"
+          />
+          <Text style={styles.buttonText}>Manage Shelters</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -131,6 +145,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
     gap: 10,
+  },
+  button: {
+    backgroundColor: '#3498db',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    gap: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

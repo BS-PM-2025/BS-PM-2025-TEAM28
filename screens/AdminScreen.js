@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -45,21 +45,22 @@ function AdminScreen({ route, navigation }) {
   style={[styles.button, styles.blueButton]}
   onPress={() => navigation.navigate('Shelters')}
 >
+  <Image source={require('../assets/shield.png')} style={styles.shieldIcon} />
   <Text style={styles.buttonText}>Manage Shelters</Text>
 </TouchableOpacity>
         <TouchableOpacity
   style={[styles.button, styles.blueButton]}
   onPress={() => navigation.navigate('ManageUsers', { adminId: user.ID })}
 >
-  <MaterialIcons name="people" size={24} color="white" />
+  <Image source={require('../assets/settings_account_box.png')} style={styles.shieldIcon} />
   <Text style={styles.buttonText}>Manage Users</Text>
 </TouchableOpacity>
         <TouchableOpacity
   style={[styles.button, styles.outlineButton]}
   onPress={() => navigation.navigate('AddressShelter')}
 >
-  <MaterialIcons name="location-on" size={24} color="#0066e6" />
-  <Text style={styles.outlineButtonText}>Find Shelter by Address</Text>
+  <Image source={require('../assets/policy.png')} style={styles.shieldIcon} />
+  <Text style={styles.outlineButtonText}>Search shelter by address</Text>
 </TouchableOpacity>
       </View>
     </ScrollView>
@@ -134,6 +135,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  shieldIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
   },
 });
 
