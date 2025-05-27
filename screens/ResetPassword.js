@@ -34,8 +34,8 @@ function ResetPassword({ navigation, route }) {
   const passwordValid = unmetRequirements.length === 0;
   const passwordsMatch = newPassword === confirmPassword;
 
-  const handleResetPassword = async () => {
-    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+const handleResetPassword = async () => {
+      if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       Alert.alert('Missing Fields', 'Please fill in all fields');
       return;
     }
