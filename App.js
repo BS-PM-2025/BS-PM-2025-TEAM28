@@ -19,6 +19,7 @@ import Shelters from './screens/Shelters';
 import ShelterMapScreen from './screens/ShelterMapScreen';
 import AddressShelterScreen from './screens/AddressShelterScreen';
 import AddShelterScreen from './screens/AddShelterScreen';
+import SavedRouteScreen from './screens/SavedRouteScreen';
 
 const Stack = createStackNavigator();
 
@@ -174,6 +175,7 @@ function Navigation() {
             title: 'Manage Users',
           }}
         />
+        <Stack.Screen name="SavedRoute" component={SavedRouteScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -65,6 +65,33 @@ const createSheltersTableIfNotExists = async () => {
     console.error('Error creating Shelters table:', err);
   }
 };
+const createSavedRoutesTableIfNotExists = async () => {
+  const query = `
+    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='SavedRoutes' AND xtype='U')
+    CREATE TABLE SavedRoutes (
+      ID INT IDENTITY(1,1) PRIMARY KEY,
+      UserID INT NOT NULL,
+      FromLatitude DECIMAL(10, 8) NOT NULL,
+      FromLongitude DECIMAL(11, 8) NOT NULL,
+      ToShelterID INT NOT NULL,
+      ToShelterName NVARCHAR(255),
+      ToLatitude DECIMAL(10, 8) NOT NULL,
+      ToLongitude DECIMAL(11, 8) NOT NULL,
+      Route NVARCHAR(MAX),
+      AddressText NVARCHAR(255),         -- <--- Add this line
+      DateSaved DATETIME DEFAULT GETDATE(),
+      FOREIGN KEY (UserID) REFERENCES Users(ID),
+      FOREIGN KEY (ToShelterID) REFERENCES Shelters(ID)
+    );
+  `;
+  try {
+    console.log('Creating SavedRoutes table if not exists...');
+    await sql.query(query);
+    console.log('SavedRoutes table created or already exists.');
+  } catch (err) {
+    console.error('Error creating SavedRoutes table:', err);
+  }
+};
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -431,6 +458,62 @@ app.get('/api/directions', async (req, res) => {
       });
     }
 
+
+
+    //saved routes////////////////////////////////////////////////////////////////////////////////
+app.post('/api/saved-routes', async (req, res) => {
+  const { userId, from, to, route, addressText } = req.body; // <-- add addressText
+  if (!userId || !from || !to || !route) {
+    return res.status(400).json({ success: false, message: 'Missing required fields' });
+  }
+  try {
+    const request = new sql.Request();
+    request.input('UserID', sql.Int, userId);
+    request.input('FromLatitude', sql.Float, from.latitude);
+    request.input('FromLongitude', sql.Float, from.longitude);
+    request.input('ToShelterID', sql.Int, to.id);
+    request.input('ToShelterName', sql.NVarChar, to.name);
+    request.input('ToLatitude', sql.Float, to.latitude);
+    request.input('ToLongitude', sql.Float, to.longitude);
+    request.input('Route', sql.NVarChar(sql.MAX), JSON.stringify(route));
+    request.input('AddressText', sql.NVarChar, addressText || null); // <-- add this line
+    await request.query(`
+      INSERT INTO SavedRoutes (UserID, FromLatitude, FromLongitude, ToShelterID, ToShelterName, ToLatitude, ToLongitude, Route, AddressText)
+      VALUES (@UserID, @FromLatitude, @FromLongitude, @ToShelterID, @ToShelterName, @ToLatitude, @ToLongitude, @Route, @AddressText)
+    `);
+    res.status(200).json({ success: true, message: 'Route saved successfully' });
+  } catch (err) {
+    console.error('Error saving route:', err);
+    res.status(500).json({ success: false, message: 'Failed to save route' });
+  }
+});
+
+app.get('/api/saved-routes/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const request = new sql.Request();
+    request.input('UserID', sql.Int, userId);
+    const result = await request.query(`
+      SELECT * FROM SavedRoutes WHERE UserID = @UserID ORDER BY DateSaved DESC
+    `);
+    res.status(200).json({ success: true, routes: result.recordset });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch saved routes' });
+  }
+});
+app.delete('/api/saved-routes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const request = new sql.Request();
+    request.input('ID', sql.Int, id);
+    await request.query('DELETE FROM SavedRoutes WHERE ID = @ID');
+    res.status(200).json({ success: true, message: 'Route deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting saved route:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete route' });
+  }
+});
+
     // Validate travel mode
     const validModes = ['walking', 'driving', 'transit', 'bicycling'];
     const travelMode = validModes.includes(mode) ? mode : 'walking';
@@ -498,6 +581,7 @@ const startServer = async () => {
     
     await createUsersTableIfNotExists();
     await createSheltersTableIfNotExists();
+    await createSavedRoutesTableIfNotExists();
     
     const port = process.env.PORT || 3000;
     app.listen(port, () => {

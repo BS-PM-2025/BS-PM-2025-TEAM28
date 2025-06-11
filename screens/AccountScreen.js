@@ -36,7 +36,6 @@ function AccountScreen({ route, navigation }) {
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const isFocused = useIsFocused();
 
-  // Load the text from AsyncStorage on mount and when screen is focused
   useEffect(() => {
     (async () => {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -140,16 +139,17 @@ function AccountScreen({ route, navigation }) {
       </Modal>
 
       <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
-        <View style={[styles.header, darkMode && styles.headerDark]}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={openSidebar}
-          >
-            <MaterialIcons name="menu" size={32} color={darkMode ? '#fff' : '#2c3e50'} />
-          </TouchableOpacity>
-          <Text style={[styles.title, darkMode && styles.titleDark]}>Account</Text>
-          <View style={styles.headerButtons} />
-        </View>
+       <View style={[styles.header, darkMode && styles.headerDark]}>
+  <TouchableOpacity
+    style={styles.iconButton}
+    onPress={openSidebar}
+  >
+    <MaterialIcons name="menu" size={32} color={darkMode ? '#fff' : '#2c3e50'} />
+  </TouchableOpacity>
+  <Text style={[styles.title, darkMode && styles.titleDark]}>Account</Text>
+  {/* Empty view for spacing */}
+  <View style={{ width: 40 }} />
+</View>
 
         <Text style={[styles.welcomeText, darkMode && styles.welcomeTextDark]}>Welcome, {user.Name}!</Text>
 
@@ -168,6 +168,17 @@ function AccountScreen({ route, navigation }) {
             </Text>
           </View>
 
+          {/* Show only for Tourist */}
+          {user.UserType === 'Tourist' && (
+            <TouchableOpacity
+              style={[styles.button, styles.blueButton]}
+              onPress={() => navigation.navigate('SavedRoute', { user })}
+            >
+              <MaterialIcons name="map" size={24} color="white" />
+              <Text style={styles.buttonText}>My Saved Route</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('ShelterMap')}
@@ -178,7 +189,7 @@ function AccountScreen({ route, navigation }) {
 
           <TouchableOpacity
             style={[styles.button, styles.outlineButton, darkMode && styles.outlineButtonDark]}
-            onPress={() => navigation.navigate('AddressShelter')}
+            onPress={() => navigation.navigate('AddressShelter', { user })}
           >
             <MaterialIcons name="location-on" size={24} color={darkMode ? '#fff' : '#0066e6'} />
             <Text style={[styles.outlineButtonText, darkMode && styles.outlineButtonTextDark]}>Find Shelter by Address</Text>
@@ -197,14 +208,14 @@ const styles = StyleSheet.create({
   containerDark: {
     backgroundColor: '#1a1a1a',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
+header: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: 20,
+  borderBottomWidth: 1,
+  borderBottomColor: '#eee',
+},
   headerDark: {
     backgroundColor: '#2c2c2c',
     borderBottomColor: '#333',

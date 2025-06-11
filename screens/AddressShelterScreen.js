@@ -6,8 +6,12 @@ import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import AddressAutocomplete from '../components/AddressAutocomplete';
 import { useSettings } from '../contexts/SettingsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function AddressShelterScreen({ navigation }) {
+
+
+function AddressShelterScreen({ navigation, route }) {
+  const user = route?.params?.user;
   const mapRef = useRef(null);
   const { mapType, formatDistance, darkMode } = useSettings();
   const [address, setAddress] = useState('');
@@ -20,22 +24,92 @@ function AddressShelterScreen({ navigation }) {
   });
   const [shelters, setShelters] = useState([]);
   const [selectedShelter, setSelectedShelter] = useState(null);
-  const [route, setRoute] = useState(null);
+ const [routeData, setRouteData] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const [addressLocation, setAddressLocation] = useState(null);
+ const passedAddress = route?.params?.address;
+ const geocodeAddress = async (addressText) => {
+  try {
+    const res = await axios.get(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressText)}&key=AIzaSyDbv7vak9FAXNNZTPyqfIaxY9R2TGvy99o`
+    );
+    if (res.data.results && res.data.results.length > 0) {
+      const location = res.data.results[0].geometry.location;
+      handleAddressSelect({
+        address: addressText,
+        location: {
+          latitude: location.lat,
+          longitude: location.lng,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('Geocoding failed:', err);
+  }
+};
+
+ useEffect(() => {
+  if (passedAddress) {
+    setAddress(passedAddress);
+    // Geocode the address to get coordinates, then trigger handleAddressSelect
+    geocodeAddress(passedAddress);
+  }
+}, [passedAddress]);
+
+
+  const isLoadedFromSaved = !!route?.params?.routeData;
+   const passedAddressLocation = route?.params?.addressLocation;
+  const passedSelectedShelter = route?.params?.selectedShelter;
+  const passedRouteData = route?.params?.routeData;
+
+ useEffect(() => {
+  if (passedAddressLocation) setAddressLocation(passedAddressLocation);
+  if (passedSelectedShelter) setSelectedShelter(passedSelectedShelter);
+  if (passedRouteData) setRouteData(passedRouteData);
+
+  if (isLoadedFromSaved && passedRouteData && passedSelectedShelter && passedAddressLocation) {
+    const distance = calculateDistance(
+      passedAddressLocation.latitude,
+      passedAddressLocation.longitude,
+      parseFloat(passedSelectedShelter.Latitude),
+      parseFloat(passedSelectedShelter.Longitude)
+    );
+    setRouteInfo({
+      distance: formatDistance(distance * 1000),
+      duration: '', // Optional: estimate or leave blank
+    });
+
+    // Center map on route
+    if (passedRouteData.length > 0) {
+      const lats = passedRouteData.map(p => p.latitude);
+      const lngs = passedRouteData.map(p => p.longitude);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      setRegion({
+        latitude: (minLat + maxLat) / 2,
+        longitude: (minLng + maxLng) / 2,
+        latitudeDelta: Math.max(0.01, (maxLat - minLat) * 1.5),
+        longitudeDelta: Math.max(0.01, (maxLng - minLng) * 1.5),
+      });
+    }
+  }
+}, [route]);
 
   useEffect(() => {
-    if (selectedShelter && addressLocation) {
-      // Delay route fetching to allow UI to update marker color
-      const timeout = setTimeout(() => {
-        fetchRoute(addressLocation, {
-          latitude: parseFloat(selectedShelter.Latitude),
-          longitude: parseFloat(selectedShelter.Longitude)
-        });
-      }, 50); // 50ms delay for UI update
-      return () => clearTimeout(timeout);
-    }
-  }, [selectedShelter, addressLocation]);
+  if (selectedShelter && addressLocation && !isLoadedFromSaved) {
+    // Only fetch route if not loaded from saved
+    const timeout = setTimeout(() => {
+      fetchRoute(addressLocation, {
+        latitude: parseFloat(selectedShelter.Latitude),
+        longitude: parseFloat(selectedShelter.Longitude)
+      });
+    }, 50);
+    return () => clearTimeout(timeout);
+  }
+}, [selectedShelter, addressLocation, isLoadedFromSaved]);
+  
 
   const findNearestShelter = (location, shelterList) => {
     if (!location || !shelterList || shelterList.length === 0) return null;
@@ -134,7 +208,7 @@ function AddressShelterScreen({ navigation }) {
           duration: formatDuration(route.duration.text)
         });
 
-        setRoute(decodedPoints);
+        setRouteData(decodedPoints);
       }
     } catch (err) {
       console.error('Error fetching route:', err);
@@ -224,6 +298,26 @@ function AddressShelterScreen({ navigation }) {
       mapRef.current.animateToRegion(newRegion, 300);
     }
   };
+const handleSaveRoute = async () => {
+  try {
+    const savedRoute = {
+      userId: user.ID,
+      from: addressLocation,
+      to: {
+        id: selectedShelter.ID,
+        name: selectedShelter.Name,
+        latitude: selectedShelter.Latitude,
+        longitude: selectedShelter.Longitude,
+      },
+      route: routeData,
+      addressText: address, // <-- Add this line
+    };
+    await axios.post('http://10.0.2.2:3000/api/saved-routes', savedRoute);
+    Alert.alert('הצלחה', 'המסלול נשמר!');
+  } catch (err) {
+    Alert.alert('שגיאה', 'לא ניתן לשמור את המסלול');
+  }
+};
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -301,9 +395,20 @@ function AddressShelterScreen({ navigation }) {
   };
 
   return (
+    
     <View style={[styles.container, darkMode && styles.containerDark]}>
+      {user?.UserType === 'Tourist' && routeData && addressLocation && selectedShelter && (
+  <TouchableOpacity
+    style={styles.saveRouteButton}
+    onPress={handleSaveRoute}
+  >
+    <MaterialIcons name="bookmark" size={20} color="#fff" />
+    <Text style={styles.saveRouteButtonText}>שמור מסלול זה</Text>
+  </TouchableOpacity>
+)}
       <View style={[styles.searchContainer, darkMode && styles.searchContainerDark]}>
         <AddressAutocomplete
+        value={address} 
           onSelectAddress={handleAddressSelect}
           placeholder="Enter address..."
           darkMode={darkMode}
@@ -353,9 +458,9 @@ function AddressShelterScreen({ navigation }) {
             />
           );
         })}
-        {route && (
+        {routeData && (
           <Polyline
-            coordinates={route}
+            coordinates={routeData}
             strokeWidth={4}
             strokeColor="#4285F4"
             zIndex={2}
@@ -404,6 +509,8 @@ function AddressShelterScreen({ navigation }) {
           </View>
         </View>
       )}
+
+     
     </View>
   );
 }
@@ -547,6 +654,24 @@ const styles = StyleSheet.create({
   },
   routeInfoLabel: {
     fontWeight: 'bold',
+  },
+   saveRouteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066e6',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  saveRouteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginLeft: 6,
   },
 });
 
