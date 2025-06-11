@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 
-const AddressAutocomplete = ({ onSelectAddress, placeholder }) => {
+const AddressAutocomplete = ({ onSelectAddress, placeholder, darkMode }) => {
   const [query, setQuery] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [showPredictions, setShowPredictions] = useState(false);
@@ -58,23 +58,37 @@ const AddressAutocomplete = ({ onSelectAddress, placeholder }) => {
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          darkMode && styles.inputDark
+        ]}
         value={query}
         onChangeText={setQuery}
         placeholder={placeholder || 'הזן כתובת...'}
-        placeholderTextColor="#666"
+        placeholderTextColor={darkMode ? '#999' : '#666'}
       />
       {showPredictions && predictions.length > 0 && (
         <FlatList
-          style={styles.predictionsList}
+          style={[
+            styles.predictionsList,
+            darkMode && styles.predictionsListDark
+          ]}
           data={predictions}
           keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.predictionItem}
+              style={[
+                styles.predictionItem,
+                darkMode && styles.predictionItemDark
+              ]}
               onPress={() => handleSelectAddress(item.place_id)}
             >
-              <Text style={styles.predictionText}>{item.description}</Text>
+              <Text style={[
+                styles.predictionText,
+                darkMode && styles.predictionTextDark
+              ]}>
+                {item.description}
+              </Text>
             </TouchableOpacity>
           )}
         />
@@ -99,6 +113,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     textAlign: 'right',
     elevation: 1,
+    color: '#333',
+  },
+  inputDark: {
+    backgroundColor: '#2c2c2c',
+    borderColor: '#444',
+    color: '#fff',
   },
   predictionsList: {
     position: 'absolute',
@@ -115,14 +135,25 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     zIndex: 1000,
   },
+  predictionsListDark: {
+    backgroundColor: '#2c2c2c',
+    shadowColor: '#000',
+  },
   predictionItem: {
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  predictionItemDark: {
+    borderBottomColor: '#444',
+  },
   predictionText: {
     fontSize: 14,
     textAlign: 'right',
+    color: '#333',
+  },
+  predictionTextDark: {
+    color: '#fff',
   },
 });
 

@@ -5,9 +5,11 @@ import axios from 'axios';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import AddressAutocomplete from '../components/AddressAutocomplete';
+import { useSettings } from '../contexts/SettingsContext';
 
 function AddressShelterScreen({ navigation }) {
   const mapRef = useRef(null);
+  const { mapType, formatDistance, darkMode } = useSettings();
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState({
@@ -128,7 +130,7 @@ function AddressShelterScreen({ navigation }) {
         
         const route = response.data.route.routes[0].legs[0];
         setRouteInfo({
-          distance: formatDistance(route.distance.text),
+          distance: formatDistance(parseInt(route.distance.value)),
           duration: formatDuration(route.duration.text)
         });
 
@@ -189,29 +191,12 @@ function AddressShelterScreen({ navigation }) {
     if (match) {
       const minutes = parseInt(match[0]);
       if (minutes === 1) {
-        return 'דקה';
+        return 'דקה אחת';
       } else {
         return `${minutes} דקות`;
       }
     }
     return duration;
-  };
-
-  const formatDistance = (distance) => {
-    const kmMatch = distance.match(/(\d+\.?\d*)\s*km/);
-    const mMatch = distance.match(/(\d+)\s*m/);
-    
-    if (kmMatch) {
-      return `${kmMatch[1]} ק"מ`;
-    } else if (mMatch) {
-      const meters = parseInt(mMatch[1]);
-      if (meters >= 1000) {
-        return `${(meters / 1000).toFixed(2)} ק"מ`;
-      } else {
-        return `${meters} מ'`;
-      }
-    }
-    return distance;
   };
 
   const handleZoomIn = () => {
@@ -316,13 +301,14 @@ function AddressShelterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
+    <View style={[styles.container, darkMode && styles.containerDark]}>
+      <View style={[styles.searchContainer, darkMode && styles.searchContainerDark]}>
         <AddressAutocomplete
           onSelectAddress={handleAddressSelect}
           placeholder="Enter address..."
+          darkMode={darkMode}
         />
-        {loading && <ActivityIndicator style={styles.loader} />}
+        {loading && <ActivityIndicator style={styles.loader} color={darkMode ? '#fff' : '#000'} />}
       </View>
 
       <MapView
@@ -335,6 +321,7 @@ function AddressShelterScreen({ navigation }) {
         showsCompass={true}
         loadingEnabled={true}
         moveOnMarkerPress={false}
+        mapType={mapType === 'satellite' ? 'satellite' : 'standard'}
       >
         {addressLocation && (
           <Marker
@@ -378,33 +365,41 @@ function AddressShelterScreen({ navigation }) {
 
       <View style={styles.fabContainer}>
         <TouchableOpacity 
-          style={styles.fabButton}
+          style={[styles.fabButton, darkMode && styles.fabButtonDark]}
           onPress={getCurrentLocation}
         >
           <MaterialIcons name="my-location" size={28} color="#e74c3c" />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.fabButton}
+          style={[styles.fabButton, darkMode && styles.fabButtonDark]}
           onPress={handleZoomIn}
         >
-          <MaterialIcons name="add" size={28} color="#333" />
+          <MaterialIcons name="add" size={28} color={darkMode ? '#fff' : '#333'} />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.fabButton}
+          style={[styles.fabButton, darkMode && styles.fabButtonDark]}
           onPress={handleZoomOut}
         >
-          <MaterialIcons name="remove" size={28} color="#333" />
+          <MaterialIcons name="remove" size={28} color={darkMode ? '#fff' : '#333'} />
         </TouchableOpacity>
       </View>
 
       {routeInfo && selectedShelter && (
-        <View style={styles.routeInfoContainer}>
-          <Text style={styles.shelterName}>מקלט {selectedShelter.Name}</Text>
+        <View style={[styles.routeInfoContainer, darkMode && styles.routeInfoContainerDark]}>
+          <Text style={[styles.shelterName, darkMode && styles.textDark]}>
+            מקלט {selectedShelter.Name}
+          </Text>
           <View style={styles.routeDetailsContainer}>
-            <MaterialIcons name="directions-walk" size={24} color="#333" style={styles.routeIcon} />
+            <MaterialIcons name="directions-walk" size={24} color={darkMode ? '#fff' : '#333'} style={styles.routeIcon} />
             <View>
-              <Text style={styles.routeInfoText}><Text style={styles.routeInfoLabel}>מרחק :</Text> {routeInfo.distance}</Text>
-              <Text style={styles.routeInfoText}><Text style={styles.routeInfoLabel}>זמן הליכה משוער :</Text> {routeInfo.duration}</Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>מרחק : </Text>
+                {routeInfo.distance}
+              </Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>זמן הליכה משוער : </Text>
+                {routeInfo.duration}
+              </Text>
             </View>
           </View>
         </View>
@@ -439,6 +434,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
   searchContainer: {
     flexDirection: 'row',
     padding: 10,
@@ -449,6 +447,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     zIndex: 1000,
+  },
+  searchContainerDark: {
+    backgroundColor: '#2c2c2c',
   },
   input: {
     flex: 1,
@@ -483,6 +484,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  routeInfoContainerDark: {
+    backgroundColor: 'rgba(44, 44, 44, 0.95)',
+  },
+  textDark: {
+    color: '#fff',
   },
   shelterName: {
     fontSize: 18,
@@ -519,12 +526,15 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  fabButtonDark: {
+    backgroundColor: '#2c2c2c',
   },
   loader: {
     position: 'absolute',
@@ -537,7 +547,6 @@ const styles = StyleSheet.create({
   },
   routeInfoLabel: {
     fontWeight: 'bold',
-    color: '#666',
   },
 });
 

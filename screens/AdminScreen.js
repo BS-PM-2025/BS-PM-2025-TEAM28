@@ -22,7 +22,7 @@ const DEFAULT_NO_SHELTER_TEXT =
   "Follow updates from local authorities via emergency apps, radio, or news channels.\n\n" +
   "Avoid Using Elevators\n\n" +
   "In case of another alert or a power outage, elevators may become dangerous.\n\n" +
-  "If You’re Outside and Far from Any Building\n\n" +
+  "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
 function AdminScreen({ route, navigation }) {
@@ -211,6 +211,14 @@ function AdminScreen({ route, navigation }) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Admin Controls</Text>
+
+          <TouchableOpacity
+            style={[styles.button, styles.blueButton]}
+            onPress={() => navigation.navigate('ShelterMap')}
+          >
+            <MaterialIcons name="my-location" size={24} color="white" />
+            <Text style={styles.buttonText}>Find Closest Shelter</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, styles.blueButton]}

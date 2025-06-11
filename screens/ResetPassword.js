@@ -10,9 +10,11 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
+import { useSettings } from '../contexts/SettingsContext';
 
 function ResetPassword({ navigation, route }) {
   const { user } = route.params;
+  const { darkMode } = useSettings();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -83,22 +85,23 @@ function ResetPassword({ navigation, route }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
+    <ScrollView contentContainerStyle={[styles.container, darkMode && styles.containerDark]}>
+      <View style={[styles.header, darkMode && styles.headerDark]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <MaterialIcons name="arrow-back" size={24} color="#2c3e50" />
+          <MaterialIcons name="arrow-back" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
         </TouchableOpacity>
-        <Text style={styles.title}>Reset Password</Text>
+        <Text style={[styles.title, darkMode && styles.titleDark]}>Reset Password</Text>
       </View>
 
       <View style={styles.form}>
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
-            style={styles.passwordInput}
+            style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
             placeholder="Current Password"
+            placeholderTextColor={darkMode ? '#999' : '#666'}
             value={currentPassword}
             onChangeText={setCurrentPassword}
             secureTextEntry={!showCurrentPassword}
@@ -110,15 +113,16 @@ function ResetPassword({ navigation, route }) {
             <MaterialIcons
               name={showCurrentPassword ? "visibility-off" : "visibility"}
               size={24}
-              color="#666"
+              color={darkMode ? '#999' : '#666'}
             />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
-            style={styles.passwordInput}
+            style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
             placeholder="New Password"
+            placeholderTextColor={darkMode ? '#999' : '#666'}
             value={newPassword}
             onChangeText={(text) => {
               setNewPassword(text);
@@ -135,17 +139,20 @@ function ResetPassword({ navigation, route }) {
             <MaterialIcons
               name={showNewPassword ? "visibility-off" : "visibility"}
               size={24}
-              color="#666"
+              color={darkMode ? '#999' : '#666'}
             />
           </TouchableOpacity>
         </View>
 
         {newPassword.length > 0 && (passwordFocused || passwordTouched) && (
-          <View style={styles.requirementsBox}>
+          <View style={[styles.requirementsBox, darkMode && styles.requirementsBoxDark]}>
             {passwordRequirements.map((req, idx) => (
               <Text
                 key={idx}
-                style={req.test(newPassword) ? styles.requirementMet : styles.requirementUnmet}
+                style={[
+                  req.test(newPassword) ? styles.requirementMet : styles.requirementUnmet,
+                  darkMode && (req.test(newPassword) ? styles.requirementMetDark : styles.requirementUnmetDark)
+                ]}
               >
                 {req.test(newPassword) ? '✓' : '•'} {req.label}
               </Text>
@@ -153,10 +160,11 @@ function ResetPassword({ navigation, route }) {
           </View>
         )}
 
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
-            style={styles.passwordInput}
+            style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
             placeholder="Confirm New Password"
+            placeholderTextColor={darkMode ? '#999' : '#666'}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
@@ -170,18 +178,21 @@ function ResetPassword({ navigation, route }) {
             <MaterialIcons
               name={showConfirmPassword ? "visibility-off" : "visibility"}
               size={24}
-              color="#666"
+              color={darkMode ? '#999' : '#666'}
             />
           </TouchableOpacity>
         </View>
 
         {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== newPassword && (
-          <Text style={styles.requirementUnmet}>Passwords do not match.</Text>
+          <Text style={[styles.requirementUnmet, darkMode && styles.requirementUnmetDark]}>
+            Passwords do not match.
+          </Text>
         )}
 
         <TouchableOpacity
           style={[
             styles.buttonBlue,
+            darkMode && !(!passwordValid || !passwordsMatch || !currentPassword) && styles.buttonBlueDark,
             (!passwordValid || !passwordsMatch || !currentPassword) && styles.buttonBlueDisabled
           ]}
           onPress={handleResetPassword}
@@ -202,12 +213,19 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  headerDark: {
+    backgroundColor: '#2c2c2c',
+    borderBottomColor: '#333',
   },
   backButton: {
     marginRight: 10,
@@ -216,6 +234,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
+  },
+  titleDark: {
+    color: '#fff',
   },
   form: {
     padding: 20,
@@ -229,10 +250,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     marginBottom: 15,
   },
+  passwordContainerDark: {
+    backgroundColor: '#2c2c2c',
+    borderColor: '#404040',
+  },
   passwordInput: {
     flex: 1,
     padding: 15,
     fontSize: 16,
+    color: '#2c3e50',
+  },
+  passwordInputDark: {
+    color: '#fff',
   },
   showPasswordButton: {
     padding: 15,
@@ -252,6 +281,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  buttonBlueDark: {
+    backgroundColor: '#0d47a1',
+  },
   buttonBlueDisabled: {
     backgroundColor: '#b0bec5',
   },
@@ -264,17 +296,29 @@ const styles = StyleSheet.create({
   requirementsBox: {
     marginTop: 10,
     marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+  },
+  requirementsBoxDark: {
+    backgroundColor: '#2c2c2c',
   },
   requirementMet: {
     color: '#888',
     fontSize: 14,
     lineHeight: 20,
   },
+  requirementMetDark: {
+    color: '#999',
+  },
   requirementUnmet: {
     color: '#1565c0',
     fontSize: 14,
     lineHeight: 20,
     fontWeight: 'bold',
+  },
+  requirementUnmetDark: {
+    color: '#64b5f6',
   },
 });
 

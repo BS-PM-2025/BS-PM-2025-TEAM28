@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "title": "הגדרות",
+    "account": "הגדרות חשבון",
+    "resetPassword": "איפוס סיסמה",
+    "appPreferences": "העדפות אפליקציה",
+    "darkMode": "מצב כהה",
+    "notifications": "התראות",
+    "language": "שפה",
+    "mapSettings": "הגדרות מפה",
+    "standardMap": "מפה רגילה",
+    "satelliteMap": "מפת לוויין",
+    "distanceUnit": "יחידת מרחק"
+  }
+} 

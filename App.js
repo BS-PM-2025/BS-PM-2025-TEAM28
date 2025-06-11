@@ -1,9 +1,11 @@
 // App.js
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import './i18n'; // Import i18n configuration
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import HomeScreen from './screens/HomeScreen';
 import Register from './screens/Register';
 import Login from './screens/Login';
@@ -20,7 +22,34 @@ import AddShelterScreen from './screens/AddShelterScreen';
 
 const Stack = createStackNavigator();
 
-export default function App() {
+// Custom theme configuration
+const CustomLightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#007bff',
+    background: '#ffffff',
+    card: '#ffffff',
+    text: '#2c3e50',
+    border: '#e0e0e0',
+  },
+};
+
+const CustomDarkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: '#0d6efd',
+    background: '#1a1a1a',
+    card: '#2c2c2c',
+    text: '#ffffff',
+    border: '#404040',
+  },
+};
+
+// Navigation component that uses settings
+function Navigation() {
+  const { darkMode } = useSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Home');
   const [userData, setUserData] = useState(null);
@@ -77,8 +106,19 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute}>
+    <NavigationContainer theme={darkMode ? CustomDarkTheme : CustomLightTheme}>
+      <Stack.Navigator 
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: darkMode ? CustomDarkTheme.colors.card : CustomLightTheme.colors.card,
+          },
+          headerTintColor: darkMode ? CustomDarkTheme.colors.text : CustomLightTheme.colors.text,
+          cardStyle: {
+            backgroundColor: darkMode ? CustomDarkTheme.colors.background : CustomLightTheme.colors.background,
+          },
+        }}
+      >
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Login" component={Login} /> 
@@ -136,5 +176,14 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+// Root component that provides settings context
+export default function App() {
+  return (
+    <SettingsProvider>
+      <Navigation />
+    </SettingsProvider>
   );
 }

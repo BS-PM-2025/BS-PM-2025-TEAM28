@@ -4,9 +4,11 @@ import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSettings } from '../contexts/SettingsContext';
 
 const ShelterMapScreen = () => {
   const mapRef = useRef(null);
+  const { mapType, formatDistance, darkMode } = useSettings();
   const [region, setRegion] = useState({
     latitude: 31.2600,
     longitude: 34.7693,
@@ -194,7 +196,6 @@ const ShelterMapScreen = () => {
   };
 
   const formatDuration = (duration) => {
-    // Convert "X mins" to "X דקות"
     const match = duration.match(/(\d+)/);
     if (match) {
       const minutes = parseInt(match[0]);
@@ -205,19 +206,6 @@ const ShelterMapScreen = () => {
       }
     }
     return duration;
-  };
-
-  const formatDistance = (distance) => {
-    // Convert "X km" or "X m" to Hebrew format
-    const kmMatch = distance.match(/(\d+\.?\d*)\s*km/);
-    const mMatch = distance.match(/(\d+)\s*m/);
-    
-    if (kmMatch) {
-      return `${kmMatch[1]} ק"מ`;
-    } else if (mMatch) {
-      return `${mMatch[1]} מטר`;
-    }
-    return distance;
   };
 
   const fetchRoute = async (origin, destination) => {
@@ -256,7 +244,7 @@ const ShelterMapScreen = () => {
         
         const route = response.data.route.routes[0].legs[0];
         setRouteInfo({
-          distance: formatDistance(route.distance.text),
+          distance: formatDistance(parseInt(route.distance.value)),
           duration: formatDuration(route.duration.text)
         });
 
@@ -467,7 +455,7 @@ const ShelterMapScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, darkMode && styles.containerDark]}>
       <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
@@ -486,6 +474,7 @@ const ShelterMapScreen = () => {
         userLocationCalloutEnabled={true}
         userLocationPriority="high"
         userLocationAnnotationTitle=""
+        mapType={mapType === 'satellite' ? 'satellite' : 'standard'}
         onMapReady={() => {
           console.log('Map is ready');
           getCurrentLocation();
@@ -548,38 +537,40 @@ const ShelterMapScreen = () => {
       
       <View style={styles.zoomButtonsContainer}>
         <TouchableOpacity 
-          style={styles.zoomButton}
+          style={[styles.zoomButton, darkMode && styles.zoomButtonDark]}
           onPress={handleZoomIn}
         >
-          <Icon name="add" size={28} color="#333" />
+          <Icon name="add" size={28} color={darkMode ? '#fff' : '#333'} />
         </TouchableOpacity>
         <TouchableOpacity 
-          style={styles.zoomButton}
+          style={[styles.zoomButton, darkMode && styles.zoomButtonDark]}
           onPress={handleZoomOut}
         >
-          <Icon name="remove" size={28} color="#333" />
+          <Icon name="remove" size={28} color={darkMode ? '#fff' : '#333'} />
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity 
-        style={styles.myLocationButton}
+        style={[styles.myLocationButton, darkMode && styles.myLocationButtonDark]}
         onPress={getCurrentLocation}
       >
         <Icon name="my-location" size={28} color="#e74c3c" />
       </TouchableOpacity>
 
-      {routeInfo && selectedShelter && (
-        <View style={styles.routeInfoContainer}>
-          <Text style={styles.shelterName}>מקלט {selectedShelter.Name}</Text>
+      {selectedShelter && routeInfo && (
+        <View style={[styles.routeInfoContainer, darkMode && styles.routeInfoContainerDark]}>
+          <Text style={[styles.shelterName, darkMode && styles.textDark]}>
+            מקלט {selectedShelter.Name}
+          </Text>
           <View style={styles.routeDetailsContainer}>
-            <Icon name="directions-walk" size={24} color="#333" style={styles.routeIcon} />
+            <Icon name="directions-walk" size={24} color={darkMode ? '#fff' : '#333'} style={styles.routeIcon} />
             <View>
-              <Text style={styles.routeInfoText}>
-                <Text style={{fontWeight: 'bold'}}>מרחק : </Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>מרחק : </Text>
                 {routeInfo.distance}
               </Text>
-              <Text style={styles.routeInfoText}>
-                <Text style={{fontWeight: 'bold'}}>זמן הליכה משוער : </Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>זמן הליכה משוער : </Text>
                 {routeInfo.duration}
               </Text>
             </View>
@@ -612,9 +603,12 @@ const styles = StyleSheet.create({
     borderRadius: 8, // Half of its width/height
     backgroundColor: '#6F9CDE', // The specified blue color for the user location
   },
-  // ... other styles ...
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
   },
   map: {
     flex: 1,
@@ -658,6 +652,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  routeInfoContainerDark: {
+    backgroundColor: 'rgba(44, 44, 44, 0.95)',
+  },
+  textDark: {
+    color: '#fff',
+  },
+  routeInfoLabel: {
+    fontWeight: 'bold',
+  },
   shelterName: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -684,6 +687,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     zIndex: 1,
+  },
+  myLocationButtonDark: {
+    backgroundColor: '#2c2c2c',
   },
   routeDetailsContainer: {
     flexDirection: 'row-reverse',
@@ -713,6 +719,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  zoomButtonDark: {
+    backgroundColor: '#2c2c2c',
   },
 });
 

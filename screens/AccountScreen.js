@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Pressable,
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import { useSettings } from '../contexts/SettingsContext';
 
 const SIDEBAR_WIDTH = 180;
 const STORAGE_KEY = 'noShelterText';
@@ -23,11 +24,12 @@ const DEFAULT_NO_SHELTER_TEXT =
   "Follow updates from local authorities via emergency apps, radio, or news channels.\n\n" +
   "Avoid Using Elevators\n\n" +
   "In case of another alert or a power outage, elevators may become dangerous.\n\n" +
-  "If You’re Outside and Far from Any Building\n\n" +
+  "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
 function AccountScreen({ route, navigation }) {
   const { user } = route.params;
+  const { darkMode } = useSettings();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [noShelterVisible, setNoShelterVisible] = useState(false);
   const [noShelterText, setNoShelterText] = useState(DEFAULT_NO_SHELTER_TEXT);
@@ -82,7 +84,7 @@ function AccountScreen({ route, navigation }) {
         onRequestClose={closeSidebar}
       >
         <Pressable style={styles.sidebarOverlay} onPress={closeSidebar}>
-          <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
+          <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }, darkMode && styles.sidebarDark]}>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
               onPress={() => {
@@ -121,48 +123,48 @@ function AccountScreen({ route, navigation }) {
         animationType="slide"
         onRequestClose={() => setNoShelterVisible(false)}
       >
-        <View style={styles.noShelterOverlay}>
-          <View style={styles.noShelterModal}>
-            <Text style={styles.noShelterTitle}>🚨 No Shelter Nearby? Follow These Steps:</Text>
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>🚨 No Shelter Nearby? Follow These Steps:</Text>
             <ScrollView>
-              <Text style={styles.noShelterText}>{noShelterText}</Text>
+              <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>{noShelterText}</Text>
             </ScrollView>
             <TouchableOpacity
-              style={styles.noShelterCloseButton}
+              style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
               onPress={() => setNoShelterVisible(false)}
             >
-              <Text style={styles.noShelterCloseButtonText}>Close</Text>
+              <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
+      <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
+        <View style={[styles.header, darkMode && styles.headerDark]}>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={openSidebar}
           >
-            <MaterialIcons name="menu" size={32} color="#2c3e50" />
+            <MaterialIcons name="menu" size={32} color={darkMode ? '#fff' : '#2c3e50'} />
           </TouchableOpacity>
-          <Text style={styles.title}>Account</Text>
+          <Text style={[styles.title, darkMode && styles.titleDark]}>Account</Text>
           <View style={styles.headerButtons} />
         </View>
 
-        <Text style={styles.welcomeText}>Welcome, {user.Name}!</Text>
+        <Text style={[styles.welcomeText, darkMode && styles.welcomeTextDark]}>Welcome, {user.Name}!</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Info</Text>
+          <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>Account Info</Text>
           <View style={styles.infoRow}>
-            <MaterialIcons name="email" size={24} color="#2c3e50" />
-            <Text style={styles.infoText}>
-              Email: <Text style={styles.bold}>{user.Gmail}</Text>
+            <MaterialIcons name="email" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
+            <Text style={[styles.infoText, darkMode && styles.infoTextDark]}>
+              Email: <Text style={[styles.bold, darkMode && styles.boldDark]}>{user.Gmail}</Text>
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <MaterialIcons name="person" size={24} color="#2c3e50" />
-            <Text style={styles.infoText}>
-              User Type: <Text style={styles.bold}>{user.UserType}</Text>
+            <MaterialIcons name="person" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
+            <Text style={[styles.infoText, darkMode && styles.infoTextDark]}>
+              User Type: <Text style={[styles.bold, darkMode && styles.boldDark]}>{user.UserType}</Text>
             </Text>
           </View>
 
@@ -175,11 +177,11 @@ function AccountScreen({ route, navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.outlineButton]}
+            style={[styles.button, styles.outlineButton, darkMode && styles.outlineButtonDark]}
             onPress={() => navigation.navigate('AddressShelter')}
           >
-            <MaterialIcons name="location-on" size={24} color="#0066e6" />
-            <Text style={styles.outlineButtonText}>Find Shelter by Address</Text>
+            <MaterialIcons name="location-on" size={24} color={darkMode ? '#fff' : '#0066e6'} />
+            <Text style={[styles.outlineButtonText, darkMode && styles.outlineButtonTextDark]}>Find Shelter by Address</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -192,6 +194,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -200,11 +205,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  headerDark: {
+    backgroundColor: '#2c2c2c',
+    borderBottomColor: '#333',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
     marginLeft: 20,
+  },
+  titleDark: {
+    color: '#fff',
   },
   headerButtons: {
     flex: 1,
@@ -221,6 +233,9 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 0,
   },
+  welcomeTextDark: {
+    color: '#fff',
+  },
   section: {
     padding: 20,
   },
@@ -229,6 +244,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2c3e50',
     marginBottom: 20,
+  },
+  sectionTitleDark: {
+    color: '#fff',
   },
   infoRow: {
     flexDirection: 'row',
@@ -240,8 +258,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2c3e50',
   },
+  infoTextDark: {
+    color: '#ccc',
+  },
   bold: {
     fontWeight: 'bold',
+  },
+  boldDark: {
+    color: '#fff',
   },
   button: {
     padding: 15,
@@ -249,112 +273,134 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     marginBottom: 15,
   },
   blueButton: {
-    backgroundColor: '#0066e6',
+    backgroundColor: '#007bff',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   outlineButton: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#0066e6',
+  },
+  outlineButtonDark: {
+    borderColor: '#fff',
   },
   outlineButtonText: {
     color: '#0066e6',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
-  buttonText: {
+  outlineButtonTextDark: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
-  // Sidebar styles
   sidebarOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  noShelterOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  noShelterOverlayDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   sidebar: {
-    width: SIDEBAR_WIDTH,
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
+    width: SIDEBAR_WIDTH,
+    backgroundColor: '#fff',
+    padding: 20,
+    paddingTop: 50,
+    elevation: 5,
+  },
+  sidebarDark: {
+    backgroundColor: '#1a1a1a',
   },
   sidebarButton: {
-    padding: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 15,
-    width: '100%',
   },
   sidebarButtonBlue: {
-    backgroundColor: '#0066e6',
+    backgroundColor: '#007bff',
+  },
+  sidebarButtonDark: {
+    backgroundColor: '#333',
   },
   sidebarButtonText: {
-    color: '#fff',
-    fontSize: 15,
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  sidebarButtonTextDark: {
+    color: '#eee',
   },
   sidebarNoShelterButtonText: {
-    color: '#fff',
-    fontSize: 13,
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
-  },
-  // No Shelter Modal styles
-  noShelterOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noShelterModal: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 24,
-    width: '90%',
-    maxHeight: '80%',
-    elevation: 8,
-  },
-  noShelterTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#e53935',
-    marginBottom: 18,
     textAlign: 'center',
   },
-  noShelterText: {
-    fontSize: 16,
-    color: '#2c3e50',
-    marginBottom: 16,
+  noShelterModal: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    maxHeight: '80%',
+    elevation: 5,
   },
-  noShelterStep: {
+  noShelterModalDark: {
+    backgroundColor: '#2c2c2c',
+  },
+  noShelterTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#1565c0',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#2c3e50',
+  },
+  noShelterTitleDark: {
+    color: '#fff',
+  },
+  noShelterText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#2c3e50',
+    textAlign: 'left',
+  },
+  noShelterTextDark: {
+    color: '#ccc',
   },
   noShelterCloseButton: {
-    backgroundColor: '#1565c0',
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginTop: 10,
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#e74c3c',
+    borderRadius: 5,
     alignItems: 'center',
   },
+  noShelterCloseButtonDark: {
+    backgroundColor: '#c0392b',
+  },
   noShelterCloseButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  noShelterCloseButtonTextDark: {
+    color: '#eee',
   },
 });
 

@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "title": "Settings",
+    "account": "Account Settings",
+    "resetPassword": "Reset Password",
+    "appPreferences": "App Preferences",
+    "darkMode": "Dark Mode",
+    "notifications": "Notifications",
+    "language": "Language",
+    "mapSettings": "Map Settings",
+    "standardMap": "Standard Map",
+    "satelliteMap": "Satellite Map",
+    "distanceUnit": "Distance Unit"
+  }
+} 
