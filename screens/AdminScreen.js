@@ -25,6 +25,19 @@ const DEFAULT_NO_SHELTER_TEXT =
   "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
+const EMERGENCY_NUMBERS_KEY = 'emergencyNumbersText';
+
+const DEFAULT_EMERGENCY_NUMBERS_TEXT =
+  "🚨 Emergency Numbers\n\n" +
+  "🔥 Fire & Rescue Services\nPhone: 102\nCall in case of fires, smoke, building collapses, or other rescue situations.\n\n" +
+  "🚑 Medical Emergency (Magen David Adom)\nPhone: 101\nCall for ambulance services, life-threatening injuries, or any urgent medical help.\n\n" +
+  "🚓 Police\nPhone: 100\nCall to report crimes, accidents, suspicious activity, or personal safety concerns.\n\n" +
+  "📞 Home Front Command Information Center\nPhone: 104\nGet real-time instructions during rocket attacks, earthquakes, or other national emergencies.\n\n" +
+  "🆘 Municipal Hotline\nPhone: 106\nLocal city hotline for reporting infrastructure problems, shelter access issues, or public hazards.\n\n" +
+  "📲 Child Emergency Hotline (Eran)\nPhone: 105\nFor reporting child abuse, online threats, or receiving help related to child protection.\n\n" +
+  "💬 Mental Health Support (Eran Organization)\nPhone: 1201\nFree emotional support in times of stress, anxiety, or trauma.\n\n" +
+  "🛡️ Stay Safe. Stay Informed.\nUse our app to quickly locate the nearest shelter when an alert is received.";
+
 function AdminScreen({ route, navigation }) {
   const { user } = route.params;
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -33,17 +46,28 @@ function AdminScreen({ route, navigation }) {
   const [noShelterText, setNoShelterText] = useState(DEFAULT_NO_SHELTER_TEXT);
   const [editText, setEditText] = useState(noShelterText);
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
+  const [emergencyVisible, setEmergencyVisible] = useState(false);
+const [emergencyEditMode, setEmergencyEditMode] = useState(false);
+const [emergencyNumbersText, setEmergencyNumbersText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
+const [emergencyEditText, setEmergencyEditText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
 
   // Load the text from AsyncStorage on mount
-  useEffect(() => {
-    (async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setNoShelterText(stored);
-        setEditText(stored);
-      }
-    })();
-  }, []);
+ useEffect(() => {
+  (async () => {
+    // Load "No Shelter Nearby" text
+    const storedNoShelter = await AsyncStorage.getItem(STORAGE_KEY);
+    if (storedNoShelter) {
+      setNoShelterText(storedNoShelter);
+      setEditText(storedNoShelter);
+    }
+    // Load Emergency Numbers text
+    const storedEmergency = await AsyncStorage.getItem(EMERGENCY_NUMBERS_KEY);
+    if (storedEmergency) {
+      setEmergencyNumbersText(storedEmergency);
+      setEmergencyEditText(storedEmergency);
+    }
+  })();
+}, []);
 
   const openSidebar = () => {
     setSidebarVisible(true);
@@ -81,6 +105,13 @@ function AdminScreen({ route, navigation }) {
     setEditMode(false);
     await AsyncStorage.setItem(STORAGE_KEY, editText);
   };
+
+  const handleEmergencyEditSave = async () => {
+  setEmergencyNumbersText(emergencyEditText);
+  setEmergencyEditMode(false);
+  await AsyncStorage.setItem(EMERGENCY_NUMBERS_KEY, emergencyEditText);
+};
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -127,6 +158,15 @@ function AdminScreen({ route, navigation }) {
             >
               <Text style={styles.sidebarNoShelterButtonText}>No Shelter Nearby?</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+  style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+  onPress={() => {
+    closeSidebar();
+    setEmergencyVisible(true);
+  }}
+>
+  <Text style={styles.sidebarNoShelterButtonText}>Emergency Numbers</Text>
+</TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -193,6 +233,68 @@ function AdminScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+      {/* Emergency Numbers Modal */} 
+      <Modal
+  visible={emergencyVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => {
+    setEmergencyVisible(false);
+    setEmergencyEditMode(false);
+  }}
+>
+  <View style={styles.noShelterOverlay}>
+    <View style={styles.noShelterModal}>
+      <Text style={styles.noShelterTitle}>🚨 Emergency Numbers</Text>
+      <ScrollView>
+        {emergencyEditMode ? (
+          <TextInput
+            style={styles.noShelterEditInput}
+            multiline
+            value={emergencyEditText}
+            onChangeText={setEmergencyEditText}
+            textAlignVertical="top"
+          />
+        ) : (
+          <Text style={styles.noShelterText}>{emergencyNumbersText}</Text>
+        )}
+      </ScrollView>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+        {emergencyEditMode ? (
+          <>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
+              onPress={handleEmergencyEditSave}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
+              onPress={() => setEmergencyEditMode(false)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
+              onPress={() => setEmergencyVisible(false)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
+              onPress={() => setEmergencyEditMode(true)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Edit</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </View>
+  </View>
+</Modal>
 
       <ScrollView style={styles.container}>
         <View style={styles.header}>

@@ -27,21 +27,40 @@ const DEFAULT_NO_SHELTER_TEXT =
   "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
+const EMERGENCY_NUMBERS_KEY = 'emergencyNumbersText';
+  const DEFAULT_EMERGENCY_NUMBERS_TEXT =
+  "🚨 Emergency Numbers\n\n" +
+  "🔥 Fire & Rescue Services\nPhone: 102\nCall in case of fires, smoke, building collapses, or other rescue situations.\n\n" +
+  "🚑 Medical Emergency (Magen David Adom)\nPhone: 101\nCall for ambulance services, life-threatening injuries, or any urgent medical help.\n\n" +
+  "🚓 Police\nPhone: 100\nCall to report crimes, accidents, suspicious activity, or personal safety concerns.\n\n" +
+  "📞 Home Front Command Information Center\nPhone: 104\nGet real-time instructions during rocket attacks, earthquakes, or other national emergencies.\n\n" +
+  "🆘 Municipal Hotline\nPhone: 106\nLocal city hotline for reporting infrastructure problems, shelter access issues, or public hazards.\n\n" +
+  "📲 Child Emergency Hotline (Eran)\nPhone: 105\nFor reporting child abuse, online threats, or receiving help related to child protection.\n\n" +
+  "💬 Mental Health Support (Eran Organization)\nPhone: 1201\nFree emotional support in times of stress, anxiety, or trauma.\n\n" +
+  "🛡️ Stay Safe. Stay Informed.\nUse our app to quickly locate the nearest shelter when an alert is received.";
+
+
 function AccountScreen({ route, navigation }) {
   const { user } = route.params;
   const { darkMode } = useSettings();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [noShelterVisible, setNoShelterVisible] = useState(false);
   const [noShelterText, setNoShelterText] = useState(DEFAULT_NO_SHELTER_TEXT);
+  const [emergencyNumbersVisible, setEmergencyNumbersVisible] = useState(false);
+  const [emergencyNumbersText, setEmergencyNumbersText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const isFocused = useIsFocused();
+  
 
-  useEffect(() => {
-    (async () => {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      setNoShelterText(stored || DEFAULT_NO_SHELTER_TEXT);
-    })();
-  }, [isFocused]);
+ useEffect(() => {
+  (async () => {
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    setNoShelterText(stored || DEFAULT_NO_SHELTER_TEXT);
+
+    const storedEmergency = await AsyncStorage.getItem(EMERGENCY_NUMBERS_KEY);
+    setEmergencyNumbersText(storedEmergency || DEFAULT_EMERGENCY_NUMBERS_TEXT);
+  })();
+}, [isFocused]);
 
   const openSidebar = () => {
     setSidebarVisible(true);
@@ -111,6 +130,15 @@ function AccountScreen({ route, navigation }) {
             >
               <Text style={styles.sidebarNoShelterButtonText}>No Shelter Nearby?</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+  style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+  onPress={() => {
+    closeSidebar();
+    setEmergencyNumbersVisible(true);
+  }}
+>
+  <Text style={styles.sidebarButtonText}>Emergency Numbers</Text>
+</TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -137,6 +165,34 @@ function AccountScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+      {/* Emergency Numbers Modal */} 
+      <Modal
+  visible={emergencyNumbersVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setEmergencyNumbersVisible(false)}
+>
+  <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+    <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+      <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
+        🚨 Emergency Numbers
+      </Text>
+      <ScrollView>
+        <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
+  {emergencyNumbersText}
+</Text>
+      </ScrollView>
+      <TouchableOpacity
+        style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
+        onPress={() => setEmergencyNumbersVisible(false)}
+      >
+        <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
+          Close
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 
       <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
        <View style={[styles.header, darkMode && styles.headerDark]}>
