@@ -11,10 +11,12 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 function ResetPassword({ navigation, route }) {
   const { user } = route.params;
   const { darkMode } = useSettings();
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,10 +28,10 @@ function ResetPassword({ navigation, route }) {
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   const passwordRequirements = [
-    { label: 'At least 8 characters', test: (pw) => pw.length >= 8 },
-    { label: 'At least one uppercase letter', test: (pw) => /[A-Z]/.test(pw) },
-    { label: 'At least one lowercase letter', test: (pw) => /[a-z]/.test(pw) },
-    { label: 'At least one number', test: (pw) => /[0-9]/.test(pw) },
+    { label: t('resetPassword:passwordRequirementLength'), test: (pw) => pw.length >= 8 },
+    { label: t('resetPassword:passwordRequirementUppercase'), test: (pw) => /[A-Z]/.test(pw) },
+    { label: t('resetPassword:passwordRequirementLowercase'), test: (pw) => /[a-z]/.test(pw) },
+    { label: t('resetPassword:passwordRequirementNumber'), test: (pw) => /[0-9]/.test(pw) },
   ];
 
   const unmetRequirements = passwordRequirements.filter(r => !r.test(newPassword));
@@ -38,23 +40,20 @@ function ResetPassword({ navigation, route }) {
 
   const handleResetPassword = async () => {
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      Alert.alert('Missing Fields', 'Please fill in all fields');
+      Alert.alert(t('resetPassword:missingFieldsTitle'), t('resetPassword:missingFieldsMessage'));
       return;
     }
 
     if (!passwordValid) {
       Alert.alert(
-        'Invalid Password',
-        'Password must be at least 8 characters long and contain:\n\n' +
-        '• At least one uppercase letter\n' +
-        '• At least one lowercase letter\n' +
-        '• At least one number'
+        t('resetPassword:invalidPasswordTitle'),
+        t('resetPassword:invalidPasswordMessage')
       );
       return;
     }
 
     if (!passwordsMatch) {
-      Alert.alert('Error', 'New passwords do not match');
+      Alert.alert(t('common:error'), t('resetPassword:newPasswordsDoNotMatch'));
       return;
     }
 
@@ -65,7 +64,7 @@ function ResetPassword({ navigation, route }) {
       });
 
       if (!loginResponse.data.success) {
-        Alert.alert('Error', 'Current password is incorrect');
+        Alert.alert(t('common:error'), t('resetPassword:currentPasswordIncorrect'));
         return;
       }
 
@@ -75,12 +74,12 @@ function ResetPassword({ navigation, route }) {
         newPassword,
       });
 
-      Alert.alert('Success', 'Password has been reset successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+      Alert.alert(t('common:successTitle'), t('resetPassword:passwordResetSuccess'), [
+        { text: t('common:ok'), onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
       console.error('Password reset error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to reset password');
+      Alert.alert(t('common:error'), error.response?.data?.message || t('resetPassword:failedToResetPassword'));
     }
   };
 
@@ -93,14 +92,14 @@ function ResetPassword({ navigation, route }) {
         >
           <MaterialIcons name="arrow-back" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
         </TouchableOpacity>
-        <Text style={[styles.title, darkMode && styles.titleDark]}>Reset Password</Text>
+        <Text style={[styles.title, darkMode && styles.titleDark]}>{t('resetPassword:title')}</Text>
       </View>
 
       <View style={styles.form}>
         <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
             style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
-            placeholder="Current Password"
+            placeholder={t('resetPassword:currentPasswordPlaceholder')}
             placeholderTextColor={darkMode ? '#999' : '#666'}
             value={currentPassword}
             onChangeText={setCurrentPassword}
@@ -121,7 +120,7 @@ function ResetPassword({ navigation, route }) {
         <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
             style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
-            placeholder="New Password"
+            placeholder={t('resetPassword:newPasswordPlaceholder')}
             placeholderTextColor={darkMode ? '#999' : '#666'}
             value={newPassword}
             onChangeText={(text) => {
@@ -163,7 +162,7 @@ function ResetPassword({ navigation, route }) {
         <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
           <TextInput
             style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
-            placeholder="Confirm New Password"
+            placeholder={t('resetPassword:confirmNewPasswordPlaceholder')}
             placeholderTextColor={darkMode ? '#999' : '#666'}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -185,7 +184,7 @@ function ResetPassword({ navigation, route }) {
 
         {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== newPassword && (
           <Text style={[styles.requirementUnmet, darkMode && styles.requirementUnmetDark]}>
-            Passwords do not match.
+            {t('resetPassword:passwordsDoNotMatch')}
           </Text>
         )}
 
@@ -198,8 +197,7 @@ function ResetPassword({ navigation, route }) {
           onPress={handleResetPassword}
           disabled={!passwordValid || !passwordsMatch || !currentPassword}
         >
-          <MaterialIcons name="lock-reset" size={24} color="#fff" />
-          <Text style={styles.buttonBlueText}>Reset Password</Text>
+          <Text style={styles.buttonBlueText}>{t('resetPassword:resetPasswordButton')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

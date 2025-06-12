@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
 function AddShelterScreen({ navigation }) {
   const [newShelter, setNewShelter] = useState({ name: '', latitude: '', longitude: '' });
+  const { t } = useTranslation();
 
   const allFieldsFilled =
     newShelter.name.trim() &&
@@ -12,40 +14,43 @@ function AddShelterScreen({ navigation }) {
     newShelter.longitude.trim();
 
   const addShelter = async () => {
-    if (!allFieldsFilled) return;
+    if (!allFieldsFilled) {
+      Alert.alert(t('addShelter:allFieldsRequired'));
+      return;
+    }
     try {
       const response = await axios.post('http://10.0.2.2:3000/api/shelters', {
         Name: newShelter.name,
         Latitude: parseFloat(newShelter.latitude),
         Longitude: parseFloat(newShelter.longitude),
       });
-      Alert.alert('Success', response.data.message);
+      Alert.alert(t('addShelter:successTitle'), response.data.message);
       navigation.goBack();
     } catch (error) {
       console.error('Error adding shelter:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to add shelter. Please try again.');
+      Alert.alert(t('common:error'), error.response?.data?.message || t('addShelter:failedToAddShelter'));
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Shelter</Text>
+      <Text style={styles.title}>{t('addShelter:title')}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Shelter Name"
+        placeholder={t('addShelter:shelterNamePlaceholder')}
         value={newShelter.name}
         onChangeText={(text) => setNewShelter({ ...newShelter, name: text })}
       />
       <TextInput
         style={styles.input}
-        placeholder="Latitude"
+        placeholder={t('addShelter:latitudePlaceholder')}
         keyboardType="numeric"
         value={newShelter.latitude}
         onChangeText={(text) => setNewShelter({ ...newShelter, latitude: text })}
       />
       <TextInput
         style={styles.input}
-        placeholder="Longitude"
+        placeholder={t('addShelter:longitudePlaceholder')}
         keyboardType="numeric"
         value={newShelter.longitude}
         onChangeText={(text) => setNewShelter({ ...newShelter, longitude: text })}
@@ -59,10 +64,10 @@ function AddShelterScreen({ navigation }) {
         disabled={!allFieldsFilled}
       >
         <Icon name="add" size={20} color="#fff" />
-        <Text style={styles.saveButtonText}>Add</Text>
+        <Text style={styles.saveButtonText}>{t('addShelter:add')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.cancelButtonText}>Cancel</Text>
+        <Text style={styles.cancelButtonText}>{t('addShelter:cancel')}</Text>
       </TouchableOpacity>
     </View>
   );

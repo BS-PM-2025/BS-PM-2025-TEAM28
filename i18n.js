@@ -54,7 +54,8 @@ i18n
     interpolation: {
       escapeValue: false
     },
-    defaultNS: 'settings'
+    ns: ['common', 'home', 'login', 'account', 'admin', 'settings'],
+    defaultNS: 'common'
   });
 
 export default i18n; 

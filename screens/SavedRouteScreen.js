@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 export default function SavedRouteScreen({ route, navigation }) {
   const user = route?.params?.user;
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -27,14 +29,14 @@ export default function SavedRouteScreen({ route, navigation }) {
       await axios.delete(`http://10.0.2.2:3000/api/saved-routes/${routeId}`);
       setRoutes(prev => prev.filter(r => r.ID !== routeId));
     } catch (err) {
-      Alert.alert('Error', 'Failed to delete route');
+      Alert.alert(t('common:error'), t('savedRoute:failedToDeleteRoute'));
     }
   };
 
   if (!user || user.UserType !== 'Tourist') {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>Only tourists can view saved routes.</Text>
+        <Text style={styles.text}>{t('savedRoute:onlyTourists')}</Text>
       </View>
     );
   }
@@ -50,7 +52,7 @@ export default function SavedRouteScreen({ route, navigation }) {
   if (routes.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>No saved routes yet.</Text>
+        <Text style={styles.text}>{t('savedRoute:noSavedRoutes')}</Text>
       </View>
     );
   }
@@ -72,35 +74,35 @@ export default function SavedRouteScreen({ route, navigation }) {
         });
       }}
     >
-      <Text style={styles.routeTitle}>To: {item.ToShelterName}</Text>
+      <Text style={styles.routeTitle}>{t('savedRoute:to')} {item.ToShelterName}</Text>
       <Text style={styles.routeDetails}>
-        From: {item.FromLatitude}, {item.FromLongitude}
+        {t('savedRoute:from')} {item.FromLatitude}, {item.FromLongitude}
       </Text>
       {/* Show the address the user typed */}
       <Text style={styles.routeDetails}>
-        Address: {item.AddressText}
+        {t('savedRoute:address')} {item.AddressText}
       </Text>
       <Text style={styles.routeDetails}>
-        Date: {new Date(item.DateSaved).toLocaleString()}
+        {t('savedRoute:date')} {new Date(item.DateSaved).toLocaleString()}
       </Text>
-      <Text style={styles.routeLink}>View Route</Text>
+      <Text style={styles.routeLink}>{t('savedRoute:viewRoute')}</Text>
     </TouchableOpacity>
     <TouchableOpacity
       style={styles.deleteButtonInline}
       activeOpacity={0.8}
       onPress={() => {
         Alert.alert(
-          'Delete Route',
-          'Are you sure you want to delete this route?',
+          t('savedRoute:deleteRouteTitle'),
+          t('savedRoute:deleteRouteMessage'),
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => handleDeleteRoute(item.ID) }
+            { text: t('savedRoute:cancel'), style: 'cancel' },
+            { text: t('savedRoute:delete'), style: 'destructive', onPress: () => handleDeleteRoute(item.ID) }
           ]
         );
       }}
       testID={`delete-route-${item.ID}`}
     >
-      <Text style={styles.deleteButtonText}>Delete</Text>
+      <Text style={styles.deleteButtonText}>{t('savedRoute:delete')}</Text>
     </TouchableOpacity>
   </View>
 )}

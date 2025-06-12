@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -21,10 +20,10 @@ import AddressShelterScreen from './screens/AddressShelterScreen';
 import AddShelterScreen from './screens/AddShelterScreen';
 import SavedRouteScreen from './screens/SavedRouteScreen';
 import ShelterReportScreen from './screens/ShelterReportScreen';
+import { useTranslation } from 'react-i18next';
 
 const Stack = createStackNavigator();
 
-// Custom theme configuration
 const CustomLightTheme = {
   ...DefaultTheme,
   colors: {
@@ -52,6 +51,7 @@ const CustomDarkTheme = {
 // Navigation component that uses settings
 function Navigation() {
   const { darkMode } = useSettings();
+  const { t, i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Home');
   const [userData, setUserData] = useState(null);
@@ -103,12 +103,12 @@ function Navigation() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !i18n.isInitialized) {
     return null;
   }
 
   return (
-    <NavigationContainer theme={darkMode ? CustomDarkTheme : CustomLightTheme}>
+    <NavigationContainer key={i18n.language} theme={darkMode ? CustomDarkTheme : CustomLightTheme}>
       <Stack.Navigator 
         initialRouteName={initialRoute}
         screenOptions={{
@@ -127,31 +127,34 @@ function Navigation() {
         <Stack.Screen 
           name="ShelterMap" 
           component={ShelterMapScreen}
-          options={{
-            title: 'Find Nearest Shelter'
-          }}
+          options={({ navigation, route }) => ({
+            title: t('common:findClosestShelter')
+          })}
         />
         <Stack.Screen 
           name="AddressShelter" 
           component={AddressShelterScreen}
-          options={{
-            title: 'Find Shelter by Address'
-          }}
+          options={({ navigation, route }) => ({
+            title: t('common:findShelterByAddress')
+          })}
         />
         <Stack.Screen 
           name="AccountScreen" 
           component={AccountScreen}
           initialParams={{ user: userData }}
+          options={({ navigation, route }) => ({
+            title: t('account:title')
+          })}
         /> 
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
         <Stack.Screen 
           name="AdminScreen" 
           component={AdminScreen}
           initialParams={{ user: userData }}
-          options={{
-            title: 'Admin Dashboard',
+          options={({ navigation, route }) => ({
+            title: t('admin:title'),
             headerLeft: null 
-          }}
+          })}
         />
          <Stack.Screen name="Shelters" component={Shelters} />
          <Stack.Screen name="AddShelter" component={AddShelterScreen} />
@@ -165,24 +168,25 @@ function Navigation() {
         <Stack.Screen 
           name="ResetPassword" 
           component={ResetPassword}
-          options={{
+          options={({ navigation, route }) => ({
+            title: t('common:resetPassword'),
             headerShown: false
-          }}
+          })}
         />
         <Stack.Screen 
           name="ManageUsers" 
           component={ManageUsersScreen}
-          options={{
-            title: 'Manage Users',
-          }}
+          options={({ navigation, route }) => ({
+            title: t('common:manageUsers'),
+          })}
         />
         <Stack.Screen name="SavedRoute" component={SavedRouteScreen} />
         <Stack.Screen 
           name="ShelterReport" 
           component={ShelterReportScreen}
-          options={{
-            title: 'Report Shelter Issue'
-          }}
+          options={({ navigation, route }) => ({
+            title: t('common:shelterReport')
+          })}
         />
       </Stack.Navigator>
     </NavigationContainer>

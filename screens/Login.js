@@ -10,8 +10,12 @@ import {
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
+import { useSettings } from '../contexts/SettingsContext';
 
 function Login({ navigation, route }) {
+  const { t } = useTranslation();
+  const { darkMode } = useSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -81,22 +85,24 @@ function Login({ navigation, route }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <View style={[styles.container, darkMode && styles.containerDark]}>
+      <Text style={[styles.title, darkMode && styles.titleDark]}>{t('login:title')}</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Email"
+        style={[styles.input, darkMode && styles.inputDark]}
+        placeholder={t('login:emailPlaceholder')}
+        placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
 
-      <View style={styles.passwordContainer}>
+      <View style={[styles.passwordContainer, darkMode && styles.passwordContainerDark]}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Password"
+          style={[styles.passwordInput, darkMode && styles.passwordInputDark]}
+          placeholder={t('login:passwordPlaceholder')}
+          placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
@@ -108,7 +114,7 @@ function Login({ navigation, route }) {
           <MaterialIcons 
             name={showPassword ? "visibility-off" : "visibility"} 
             size={24} 
-            color="#666" 
+            color={darkMode ? '#95a5a6' : '#666'} 
           />
         </TouchableOpacity>
       </View>
@@ -120,20 +126,20 @@ function Login({ navigation, route }) {
         <MaterialIcons 
           name={rememberMe ? "check-box" : "check-box-outline-blank"} 
           size={24} 
-          color="#2c3e50" 
+          color={darkMode ? '#fff' : '#2c3e50'} 
         />
-        <Text style={styles.rememberMeText}>Remember Me</Text>
+        <Text style={[styles.rememberMeText, darkMode && styles.rememberMeTextDark]}>{t('common:rememberMe')}</Text>
       </TouchableOpacity>
 
-     <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
-        <Text style={styles.buttonBlueText}>Login</Text>
+      <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
+        <Text style={styles.buttonBlueText}>{t('login:loginButton')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.outlineButtonSmall}
+        style={[styles.outlineButtonSmall, darkMode && styles.outlineButtonSmallDark]}
         onPress={() => navigation.navigate('ForgotPassword')}
       >
-        <Text style={styles.outlineButtonSmallText}>Forgot Password?</Text>
+        <Text style={[styles.outlineButtonSmallText, darkMode && styles.outlineButtonSmallTextDark]}>{t('login:forgotPassword')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -146,12 +152,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
   title: {
     fontSize: 32,
     marginBottom: 40,
     textAlign: 'center',
     color: '#2c3e50',
     fontWeight: 'bold',
+  },
+  titleDark: {
+    color: '#fff',
   },
   input: {
     borderWidth: 1,
@@ -161,6 +173,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     marginBottom: 15,
     fontSize: 16,
+    color: '#2c3e50',
+  },
+  inputDark: {
+    borderColor: '#444',
+    backgroundColor: '#2c2c2c',
+    color: '#fff',
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -171,10 +189,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     marginBottom: 15,
   },
+  passwordContainerDark: {
+    borderColor: '#444',
+    backgroundColor: '#2c2c2c',
+  },
   passwordInput: {
     flex: 1,
     padding: 15,
     fontSize: 16,
+    color: '#2c3e50',
+  },
+  passwordInputDark: {
+    color: '#fff',
   },
   showPasswordButton: {
     padding: 15,
@@ -188,6 +214,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#2c3e50',
     fontSize: 16,
+  },
+  rememberMeTextDark: {
+    color: '#fff',
   },
   buttonBlue: {
     backgroundColor: '#0066e6',
@@ -221,11 +250,17 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignSelf: 'center',
   },
+  outlineButtonSmallDark: {
+    borderColor: '#3498db',
+  },
   outlineButtonSmallText: {
     color: '#0066e6',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 6,
+  },
+  outlineButtonSmallTextDark: {
+    color: '#3498db',
   },
 });
 

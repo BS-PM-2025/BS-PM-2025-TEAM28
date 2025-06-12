@@ -11,8 +11,12 @@ import {
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
+import { useSettings } from '../contexts/SettingsContext';
 
 function Register() {
+  const { t } = useTranslation();
+  const { darkMode } = useSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,19 +36,19 @@ function Register() {
   // Password requirements
   const passwordRequirements = [
     {
-      label: 'At least 8 characters',
+      label: t('register:passwordRequirementLength'),
       test: (pw) => pw.length >= 8,
     },
     {
-      label: 'At least one uppercase letter',
+      label: t('register:passwordRequirementUppercase'),
       test: (pw) => /[A-Z]/.test(pw),
     },
     {
-      label: 'At least one lowercase letter',
+      label: t('register:passwordRequirementLowercase'),
       test: (pw) => /[a-z]/.test(pw),
     },
     {
-      label: 'At least one number',
+      label: t('register:passwordRequirementNumber'),
       test: (pw) => /[0-9]/.test(pw),
     },
   ];
@@ -60,11 +64,11 @@ function Register() {
   const handleRegister = async () => {
     setAttemptedRegister(true);
     if (!allFieldsFilled) {
-      Alert.alert('Missing Fields', 'Please fill in all fields');
+      Alert.alert(t('register:missingFieldsTitle'), t('register:missingFieldsMessage'));
       return;
     }
     if (!passwordsMatch) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t('common:error'), t('register:passwordsDoNotMatch'));
       return;
     }
     if (!passwordValid) {
@@ -81,63 +85,73 @@ function Register() {
         userType,
       });
       if (response.data.success) {
-        Alert.alert('Success', 'Registration successful!', [
+        Alert.alert(t('common:successTitle'), t('register:registrationSuccessful'), [
           {
-            text: 'OK',
+            text: t('common:ok'),
             onPress: () => navigation.navigate('Login', { prefillEmail: email })
           }
         ]);
       }
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to register');
+      Alert.alert(t('common:error'), error.response?.data?.message || t('register:failedToRegister'));
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Register</Text>
+    <ScrollView contentContainerStyle={[styles.container, darkMode && styles.containerDark]}>
+      <Text style={[styles.title, darkMode && styles.titleDark]}>{t('register:title')}</Text>
 
       <View style={styles.userTypeButtonsRow}>
         <TouchableOpacity
           style={[
             styles.userTypeButtonBlue,
-            userType === 'Resident' ? styles.userTypeButtonBlueActive : styles.userTypeButtonBlueOutline
+            userType === 'Resident'
+              ? styles.userTypeButtonBlueActive
+              : (darkMode ? styles.userTypeButtonOutlineDark : styles.userTypeButtonBlueOutline)
           ]}
           onPress={() => setUserType('Resident')}
         >
           <Text style={[
             styles.userTypeButtonText,
-            userType === 'Resident' ? styles.userTypeButtonTextActive : styles.userTypeButtonTextOutline
+            userType === 'Resident'
+              ? styles.userTypeButtonTextActive
+              : (darkMode ? styles.userTypeButtonTextOutlineDark : styles.userTypeButtonTextOutline)
           ]}>
-            {userType === 'Resident' ? '✓ ' : ''}Resident
+            {userType === 'Resident' ? '✓ ' : ''}{t('register:resident')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.userTypeButtonBlue,
-            userType === 'Tourist' ? styles.userTypeButtonBlueActive : styles.userTypeButtonBlueOutline
+            userType === 'Tourist'
+              ? styles.userTypeButtonBlueActive
+              : (darkMode ? styles.userTypeButtonOutlineDark : styles.userTypeButtonBlueOutline)
           ]}
           onPress={() => setUserType('Tourist')}
         >
           <Text style={[
             styles.userTypeButtonText,
-            userType === 'Tourist' ? styles.userTypeButtonTextActive : styles.userTypeButtonTextOutline
+            userType === 'Tourist'
+              ? styles.userTypeButtonTextActive
+              : (darkMode ? styles.userTypeButtonTextOutlineDark : styles.userTypeButtonTextOutline)
           ]}>
-            {userType === 'Tourist' ? '✓ ' : ''}Tourist
+            {userType === 'Tourist' ? '✓ ' : ''}{t('register:tourist')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <TextInput
-        style={styles.input}
-        placeholder="Name"
+        style={[styles.input, darkMode && styles.inputDark]}
+        placeholder={t('register:namePlaceholder')}
+        placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
         value={name}
         onChangeText={setName}
       />
       <TextInput
-        style={styles.input}
-        placeholder="Email"
+        style={[styles.input, darkMode && styles.inputDark]}
+        placeholder={t('register:emailPlaceholder')}
+        placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -146,12 +160,13 @@ function Register() {
         onBlur={() => { setEmailFocused(false); setEmailTouched(true); }}
       />
       {email.length > 0 && !emailValid && emailTouched && (
-        <Text style={styles.requirementUnmet}>Please enter a valid email address.</Text>
+        <Text style={[styles.requirementUnmet, darkMode && styles.requirementUnmetDark]}>{t('register:invalidEmail')}</Text>
       )}
       <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Password"
+          style={[styles.passwordInput, darkMode && styles.inputDark]}
+          placeholder={t('register:passwordPlaceholder')}
+          placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
@@ -165,17 +180,21 @@ function Register() {
           <MaterialIcons 
             name={showPassword ? "visibility-off" : "visibility"} 
             size={24} 
-            color="#666" 
+            color={darkMode ? '#95a5a6' : '#666'} 
           />
         </TouchableOpacity>
       </View>
 
       {password.length > 0 && !passwordValid && (passwordFocused || passwordTouched) && (
-        <View style={styles.requirementsBox}>
+        <View style={[styles.requirementsBox, darkMode && styles.requirementsBoxDark]}>
           {passwordRequirements.map((req, idx) => (
             <Text
               key={idx}
-              style={req.test(password) ? styles.requirementMet : styles.requirementUnmet}
+              style={[
+                req.test(password)
+                  ? (darkMode ? styles.requirementMetDark : styles.requirementMet)
+                  : (darkMode ? styles.requirementUnmetDark : styles.requirementUnmet),
+              ]}
             >
               • {req.label}
             </Text>
@@ -185,8 +204,9 @@ function Register() {
 
       <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
-          placeholder="Confirm Password"
+          style={[styles.passwordInput, darkMode && styles.inputDark]}
+          placeholder={t('register:confirmPasswordPlaceholder')}
+          placeholderTextColor={darkMode ? '#95a5a6' : '#666'}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry={!showConfirmPassword}
@@ -200,25 +220,29 @@ function Register() {
           <MaterialIcons 
             name={showConfirmPassword ? "visibility-off" : "visibility"} 
             size={24} 
-            color="#666" 
+            color={darkMode ? '#95a5a6' : '#666'} 
           />
         </TouchableOpacity>
       </View>
       {confirmPasswordFocused && confirmPassword.length > 0 && confirmPassword !== password && (
-        <Text style={styles.requirementUnmet}>Passwords do not match.</Text>
+        <Text style={[styles.requirementUnmet, darkMode && styles.requirementUnmetDark]}>{t('register:passwordsDoNotMatch')}</Text>
       )}
 
       <TouchableOpacity
-        style={[styles.buttonBlue, !canRegister && styles.buttonBlueDisabled]}
+        style={[
+          styles.buttonBlue,
+          !canRegister && styles.buttonBlueDisabled,
+          darkMode && styles.buttonBlueDark
+        ]}
         onPress={handleRegister}
         disabled={!canRegister}
       >
-        <Text style={styles.buttonBlueText}>Register</Text>
+        <Text style={[styles.buttonBlueText, darkMode && styles.buttonBlueTextDark]}>{t('register:registerButton')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>
-          Already have an account? <Text style={styles.loginLink}>Login</Text>
+        <Text style={[styles.loginText, darkMode && styles.loginTextDark]}>
+          {t('register:alreadyHaveAccount')} <Text style={[styles.loginLink, darkMode && styles.loginLinkDark]}>{t('common:login')}</Text>
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -231,12 +255,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
   title: {
     fontSize: 32,
     marginBottom: 40,
     textAlign: 'center',
     color: '#2c3e50',
     fontWeight: 'bold',
+  },
+  titleDark: {
+    color: '#fff',
   },
   userTypeButtonsRow: {
     flexDirection: 'row',
@@ -268,80 +298,120 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   userTypeButtonTextOutline: {
-    color: '#0066e6',
+    color: '#2c3e50',
+  },
+  userTypeButtonTextOutlineDark: {
+    color: '#fff',
+  },
+  userTypeButtonOutlineDark: {
+    backgroundColor: '#2c2c2c',
+    borderColor: '#444',
   },
   input: {
+    height: 50,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    padding: 15,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 15,
+    marginBottom: 16,
+    paddingHorizontal: 15,
     fontSize: 16,
+    backgroundColor: '#fff',
+    color: '#2c3e50',
+  },
+  inputDark: {
+    backgroundColor: '#2c2c2c',
+    borderColor: '#444',
+    color: '#fff',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   passwordInput: {
     flex: 1,
-    padding: 15,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
     fontSize: 16,
+    backgroundColor: '#fff',
+    color: '#2c3e50',
   },
   showPasswordButton: {
-    padding: 15,
+    position: 'absolute',
+    right: 15,
+    padding: 5,
   },
   requirementsBox: {
-    marginTop: 10,
-    marginBottom: 10,
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  requirementsBoxDark: {
+    backgroundColor: '#2c2c2c',
+    borderColor: '#444',
   },
   requirementMet: {
-    color: '#888',
-    fontSize: 14,
-    lineHeight: 20,
+    color: '#27ae60',
+    marginBottom: 4,
+  },
+  requirementMetDark: {
+    color: '#3498db',
   },
   requirementUnmet: {
-    color: '#0066e6',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 'bold',
+    color: '#e74c3c',
+    marginBottom: 4,
+  },
+  requirementUnmetDark: {
+    color: '#95a5a6',
   },
   buttonBlue: {
-    backgroundColor: '#0066e6',
+    backgroundColor: '#3498db',
     padding: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
     marginTop: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  },
+  buttonBlueDark: {
+    backgroundColor: '#2980b9',
   },
   buttonBlueDisabled: {
-    backgroundColor: '#b0bec5',
+    backgroundColor: '#bdc3c7',
   },
   buttonBlueText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'normal',
+    fontWeight: 'bold',
+  },
+  buttonBlueTextDark: {
+    color: '#fff',
   },
   loginText: {
     marginTop: 20,
-    color: '#666',
-    fontSize: 14,
     textAlign: 'center',
+    color: '#7f8c8d',
+  },
+  loginTextDark: {
+    color: '#95a5a6',
   },
   loginLink: {
+    color: '#3498db',
     fontWeight: 'bold',
+  },
+  loginLinkDark: {
+    color: '#3498db',
+  },
+  userTypeButtonDark: {
+    borderColor: '#444',
+    backgroundColor: '#2c2c2c',
+  },
+  userTypeButtonTextDark: {
+    color: '#fff',
   },
 });
 

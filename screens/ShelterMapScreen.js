@@ -5,10 +5,19 @@ import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 const ShelterMapScreen = () => {
   const mapRef = useRef(null);
-  const { mapType, formatDistance, darkMode } = useSettings();
+  const { mapType, formatDistance, darkMode, language } = useSettings();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    console.log('Current language:', language);
+    console.log('Translated distance label:', t('shelterMap:distanceLabel'));
+    console.log('Translated estimated walking time label:', t('shelterMap:estimatedWalkingTimeLabel'));
+  }, [language]);
+
   const [region, setRegion] = useState({
     latitude: 31.2600,
     longitude: 34.7693,
@@ -43,7 +52,7 @@ const ShelterMapScreen = () => {
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
     const a = 
@@ -64,11 +73,11 @@ const ShelterMapScreen = () => {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: 'Precise Location Permission',
-            message: 'This app needs access to your precise location to find the nearest shelter.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
+            title: t('shelterMap:preciseLocationPermissionTitle'),
+            message: t('shelterMap:preciseLocationPermissionMessage'),
+            buttonNeutral: t('shelterMap:askMeLater'),
+            buttonNegative: t('shelterMap:cancel'),
+            buttonPositive: t('shelterMap:ok'),
           }
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
@@ -83,7 +92,7 @@ const ShelterMapScreen = () => {
   const getCurrentLocation = async () => {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-      Alert.alert('הרשאה נדחתה', 'נדרשת הרשאת מיקום כדי להציג את מיקומך על המפה.');
+      Alert.alert(t('common:permissionDenied'), t('common:locationPermissionRequired'));
       return;
     }
 
@@ -105,9 +114,7 @@ const ShelterMapScreen = () => {
         if (latitude >= 29.5 && latitude <= 33.3 && longitude >= 34.2 && longitude <= 35.9) {
           const userLoc = { latitude, longitude };
           setUserLocation(userLoc);
-          
-          // Adjusted zoom level to show more area
-          const zoomLevel = 0.008; // Less zoom for wider view
+          const zoomLevel = 0.008;
           setRegion({
             latitude,
             longitude,
@@ -115,7 +122,6 @@ const ShelterMapScreen = () => {
             longitudeDelta: zoomLevel * 0.5,
           });
 
-          // Find and route to nearest shelter
           if (shelters.length > 0) {
             const nearest = findNearestShelter(userLoc, shelters);
             if (nearest) {
@@ -129,8 +135,8 @@ const ShelterMapScreen = () => {
         } else {
           console.warn('Location outside Israel bounds:', { latitude, longitude });
           Alert.alert(
-            'אזהרת מיקום',
-            'נראה שאתה מחוץ לישראל. המפה תתמקד בבאר שבע.'
+            t('common:locationWarning'),
+            t('common:outsideIsrael')
           );
           setRegion({
             latitude: 31.2600,
@@ -143,14 +149,13 @@ const ShelterMapScreen = () => {
       (error) => {
         console.error('Location error:', error);
         Alert.alert(
-          'שגיאת מיקום',
-          'לא הצלחנו לקבל את מיקומך. אנא ודא שהגישה למיקום מופעלת.'
+          t('common:locationError'),
+          t('common:failedToGetLocation')
         );
       },
       config
     );
 
-    // Start watching position for continuous updates
     Geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -179,14 +184,13 @@ const ShelterMapScreen = () => {
       animated: true,
     });
 
-    // Add a slight delay then zoom in a bit for better view
     setTimeout(() => {
       if (mapRef.current) {
         const currentRegion = mapRef.current.__lastRegion;
         if (currentRegion) {
           const newRegion = {
             ...currentRegion,
-            latitudeDelta: currentRegion.latitudeDelta * 0.8, // Zoom in by 20%
+            latitudeDelta: currentRegion.latitudeDelta * 0.8,
             longitudeDelta: currentRegion.latitudeDelta * 0.8 * 0.5,
           };
           mapRef.current.animateToRegion(newRegion, 300);
@@ -196,16 +200,36 @@ const ShelterMapScreen = () => {
   };
 
   const formatDuration = (duration) => {
-    const match = duration.match(/(\d+)/);
-    if (match) {
-      const minutes = parseInt(match[0]);
-      if (minutes === 1) {
-        return 'דקה אחת';
-      } else {
-        return `${minutes} דקות`;
-      }
+    const hoursMatch = duration.match(/(\d+)\s*hour/);
+    const minutesMatch = duration.match(/(\d+)\s*min/);
+
+    let hours = 0;
+    let minutes = 0;
+
+    if (hoursMatch) {
+      hours = parseInt(hoursMatch[1]);
     }
-    return duration;
+    if (minutesMatch) {
+      minutes = parseInt(minutesMatch[1]);
+    }
+
+    if (hours === 0 && minutes === 0) {
+      return duration; // Return original if no valid duration found
+    }
+
+    let formattedString = '';
+    if (hours > 0) {
+      formattedString += hours === 1 ? t('common:oneHour') : t('common:hours', { count: hours });
+    }
+
+    if (minutes > 0) {
+      if (formattedString !== '') {
+        formattedString += ' ';
+      }
+      formattedString += minutes === 1 ? t('common:oneMinute') : t('common:minutes', { count: minutes });
+    }
+
+    return formattedString;
   };
 
   const fetchRoute = async (origin, destination) => {
@@ -216,7 +240,7 @@ const ShelterMapScreen = () => {
 
       if (!origin || !destination) {
         console.error('Missing coordinates:', { origin, destination });
-        Alert.alert('שגיאה', 'חסרים נתוני מיקום');
+        Alert.alert(t('common:error'), t('common:missingLocationData'));
         return;
       }
 
@@ -247,24 +271,23 @@ const ShelterMapScreen = () => {
           distance: formatDistance(parseInt(route.distance.value)),
           duration: formatDuration(route.duration.text)
         });
+        console.log('Raw duration text from API:', route.duration.text);
 
         setRoute(decodedPoints);
         
         if (mapRef.current && decodedPoints.length > 0) {
           const edgePadding = {
-            top: 100,    // Increased padding
-            right: 100,  // Increased padding
-            bottom: 100, // Increased padding
-            left: 100    // Increased padding
+            top: 100,    
+            right: 100,  
+            bottom: 100, 
+            left: 100    
           };
           
-          // Add some extra points around the route to ensure wider view
           const routePoints = [...decodedPoints];
           const firstPoint = routePoints[0];
           const lastPoint = routePoints[routePoints.length - 1];
           
-          // Add points slightly outside the route bounds
-          const padding = 0.001; // Adjust this value to change how much extra area to show
+          const padding = 0.001; 
           routePoints.push({
             latitude: firstPoint.latitude + padding,
             longitude: firstPoint.longitude + padding
@@ -280,14 +303,14 @@ const ShelterMapScreen = () => {
           });
         }
       } else {
-        const errorMessage = response.data.message || response.data.error || 'שגיאה לא ידועה';
+        const errorMessage = response.data.message || t('common:error');
         console.error('Route API error:', errorMessage);
-        Alert.alert('שגיאת מסלול', `לא ניתן למצוא מסלול: ${errorMessage}`);
+        Alert.alert(t('common:error'), errorMessage);
       }
     } catch (err) {
       console.error('=== ERROR ===');
       console.error('Error details:', err);
-      Alert.alert('שגיאה', 'לא הצלחנו למצוא מסלול. בדוק את הלוג לפרטים נוספים.');
+      Alert.alert(t('common:error'), t('common:missingLocationData'));
     }
   };
 
@@ -329,7 +352,6 @@ const ShelterMapScreen = () => {
       const finalLat = lat * 1e-5;
       const finalLng = lng * 1e-5;
 
-      // Validate coordinates are within reasonable bounds
       if (finalLat >= 29.5 && finalLat <= 33.3 && finalLng >= 34.2 && finalLng <= 35.9) {
         poly.push({
           latitude: finalLat,
@@ -359,13 +381,13 @@ const ShelterMapScreen = () => {
 
       fetchRoute(origin, destination);
     } else {
-      Alert.alert('נדרש מיקום', 'אנא אפשר גישה למיקום כדי לראות את המסלול למקלט.');
+      Alert.alert(t('common:permissionDenied'), t('common:locationPermissionRequired'));
     }
   };
 
   const handleZoomIn = () => {
     if (mapRef.current) {
-      const newDelta = Math.max(region.latitudeDelta * 0.7, 0.002); // Prevent over-zooming
+      const newDelta = Math.max(region.latitudeDelta * 0.7, 0.002);
       const newRegion = {
         ...region,
         latitudeDelta: newDelta,
@@ -378,7 +400,7 @@ const ShelterMapScreen = () => {
 
   const handleZoomOut = () => {
     if (mapRef.current) {
-      const newDelta = Math.min(region.latitudeDelta * 1.3, 0.1); // Limit max zoom out
+      const newDelta = Math.min(region.latitudeDelta * 1.3, 0.1);
       const newRegion = {
         ...region,
         latitudeDelta: newDelta,
@@ -404,8 +426,6 @@ const ShelterMapScreen = () => {
           }));
           console.log('Formatted shelters:', formattedShelters);
           setShelters(formattedShelters);
-          
-          // If we have user location, find and route to nearest shelter
           if (userLocation) {
             const nearest = findNearestShelter(userLocation, formattedShelters);
             if (nearest) {
@@ -417,21 +437,20 @@ const ShelterMapScreen = () => {
             }
           }
         } else {
-          setError('התקבל פורמט נתונים לא תקין מהשרת');
+          setError(t('common:error'));
         }
       } catch (err) {
         console.error('Error details:', err);
         setError(err.message);
         Alert.alert(
-          'שגיאה',
-          'לא הצלחנו לטעון את המקלטים. אנא בדוק את החיבור לאינטרנט ונסה שוב.'
+          t('common:error'),
+          t('shelterReport:failedToLoadShelters')
         );
       } finally {
         setLoading(false);
       }
     };
 
-    // Get location first, then fetch shelters
     getCurrentLocation().then(() => {
       fetchShelters();
     });
@@ -441,7 +460,7 @@ const ShelterMapScreen = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#e74c3c" />
-        <Text style={styles.loadingText}>טוען מקלטים...</Text>
+        <Text style={styles.loadingText}>{t('shelterMap:loadingMap')}</Text>
       </View>
     );
   }
@@ -449,7 +468,7 @@ const ShelterMapScreen = () => {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>שגיאה: {error}</Text>
+        <Text style={styles.errorText}>{t('common:error')}: {error}</Text>
       </View>
     );
   }
@@ -490,9 +509,9 @@ const ShelterMapScreen = () => {
         {userLocation && (
           <Marker
             coordinate={userLocation}
-            anchor={{ x: 0.5, y: 0.5 }} // Centers the icon on the coordinate
-            flat={true} // Ensures the icon is rendered as a flat 2D image
-            zIndex={5} // To ensure it's suitably layered (e.g., above polylines)
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat={true}
+            zIndex={5}
           >
             <View style={styles.userLocationOuterCircle}>
               <View style={styles.userLocationInnerCircle} />
@@ -560,17 +579,17 @@ const ShelterMapScreen = () => {
       {selectedShelter && routeInfo && (
         <View style={[styles.routeInfoContainer, darkMode && styles.routeInfoContainerDark]}>
           <Text style={[styles.shelterName, darkMode && styles.textDark]}>
-            מקלט {selectedShelter.Name}
+            {t('common:shelter')} {selectedShelter.Name}
           </Text>
-          <View style={styles.routeDetailsContainer}>
-            <Icon name="directions-walk" size={24} color={darkMode ? '#fff' : '#333'} style={styles.routeIcon} />
+          <View style={[styles.routeDetailsContainer, language === 'he' && styles.routeDetailsContainerRTL]}>
+            <Icon name="directions-walk" size={24} color={darkMode ? '#fff' : '#333'} style={language === 'he' ? styles.routeIconRTL : styles.routeIcon} />
             <View>
-              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
-                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>מרחק : </Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark, language === 'he' && styles.rtlText]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark, language === 'he' && styles.rtlText]}>{t('shelterMap:distanceLabel')}</Text>
                 {routeInfo.distance}
               </Text>
-              <Text style={[styles.routeInfoText, darkMode && styles.textDark]}>
-                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark]}>זמן הליכה משוער : </Text>
+              <Text style={[styles.routeInfoText, darkMode && styles.textDark, language === 'he' && styles.rtlText]}>
+                <Text style={[styles.routeInfoLabel, darkMode && styles.textDark, language === 'he' && styles.rtlText]}>{t('shelterMap:estimatedWalkingTimeLabel')}</Text>
                 {routeInfo.duration}
               </Text>
             </View>
@@ -582,26 +601,24 @@ const ShelterMapScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  userLocationOuterCircle: { // This view creates the white stroke and applies shadow
-    width: 22, // Total diameter of the marker (inner blue + white stroke)
+  userLocationOuterCircle: {
+    width: 22,
     height: 22,
-    borderRadius: 11, // Half of the width/height to make it a circle
-    backgroundColor: 'white', // This will be the color of the stroke
+    borderRadius: 11,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    // Shadow properties for iOS
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 0 }, // Centered shadow
-    shadowOpacity: 0.4, // How transparent the shadow is
-    shadowRadius: 3,   // How blurred the shadow is
-    // Elevation for Android shadow
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
     elevation: 4,
   },
-  userLocationInnerCircle: { // This view is the main blue filled circle
-    width: 16, // Diameter of the inner blue circle
+  userLocationInnerCircle: {
+    width: 16,
     height: 16,
-    borderRadius: 8, // Half of its width/height
-    backgroundColor: '#6F9CDE', // The specified blue color for the user location
+    borderRadius: 8,
+    backgroundColor: '#6F9CDE',
   },
   container: {
     flex: 1,
@@ -666,13 +683,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
     color: '#333',
-    textAlign: 'right',
+    textAlign: 'left',
+  },
+  shelterNameDark: {
+    color: '#fff',
   },
   routeInfoText: {
     fontSize: 16,
     color: '#666',
     marginVertical: 2,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   myLocationButton: {
     position: 'absolute',
@@ -692,16 +712,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2c',
   },
   routeDetailsContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
   },
-  routeIcon: {
-    marginLeft: 12,
+  routeDetailsContainerRTL: {
+    flexDirection: 'row-reverse',
   },
-  zoomButtonsContainer: { // MODIFIED PART
+  routeIcon: {
+    marginRight: 12,
+  },
+  routeIconRTL: {
+    marginLeft: 12,
+    marginRight: 0,
+  },
+  zoomButtonsContainer: {
     position: 'absolute',
-    right: 26, // <--- THIS IS THE CHANGE
+    right: 26,
     top: 80,
     backgroundColor: 'transparent',
     zIndex: 1,
@@ -722,6 +749,9 @@ const styles = StyleSheet.create({
   },
   zoomButtonDark: {
     backgroundColor: '#2c2c2c',
+  },
+  rtlText: {
+    textAlign: 'right',
   },
 });
 

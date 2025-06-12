@@ -13,10 +13,15 @@ import { Picker } from '@react-native-picker/picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 function ShelterReportScreen({ navigation, route }) {
   const { user } = route.params;
   const { darkMode } = useSettings();
+  const { t } = useTranslation();
+
+  console.log('ShelterReportScreen - Dark Mode:', darkMode);
+
   const [loading, setLoading] = useState(false);
   const [shelters, setShelters] = useState([]);
   const [selectedShelter, setSelectedShelter] = useState(null);
@@ -40,7 +45,7 @@ function ShelterReportScreen({ navigation, route }) {
       }
     } catch (error) {
       console.error('Error fetching shelters:', error);
-      Alert.alert('Error', 'Failed to load shelters. Please try again later.');
+      Alert.alert(t('common:error'), t('shelterReport:failedToLoadShelters'));
     }
   };
 
@@ -58,7 +63,7 @@ function ShelterReportScreen({ navigation, route }) {
 
   const handleSubmit = async () => {
     if (!selectedShelter || !report.issueDescription.trim()) {
-      Alert.alert('Missing Information', 'Please select a shelter and describe the issue');
+      Alert.alert(t('shelterReport:missingInfoTitle'), t('shelterReport:missingInfoMessage'));
       return;
     }
 
@@ -67,23 +72,23 @@ function ShelterReportScreen({ navigation, route }) {
       const response = await axios.post('http://10.0.2.2:3000/api/send-shelter-report', {
         ...report,
         to: 'onlinelibrary6565@gmail.com',
-        subject: `Shelter Report: ${report.shelterName}`,
+        subject: `${t('shelterReport:title')}: ${report.shelterName}`,
       });
 
       if (response.data.success) {
         Alert.alert(
-          'Report Submitted',
-          'Thank you for your report. We will investigate the issue.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          t('shelterReport:reportSubmittedTitle'),
+          t('shelterReport:reportSubmittedMessage'),
+          [{ text: t('shelterMap:ok'), onPress: () => navigation.goBack() }]
         );
       } else {
-        throw new Error(response.data.message || 'Failed to submit report');
+        throw new Error(response.data.message || t('shelterReport:failedToSubmitReport'));
       }
     } catch (error) {
       console.error('Error submitting report:', error);
       Alert.alert(
-        'Error',
-        'Failed to submit report. Please try again later.'
+        t('common:error'),
+        t('shelterReport:failedToSubmitReport')
       );
     } finally {
       setLoading(false);
@@ -92,26 +97,10 @@ function ShelterReportScreen({ navigation, route }) {
 
   return (
     <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
-      <View style={[styles.header, darkMode && styles.headerDark]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons 
-            name="arrow-back" 
-            size={24} 
-            color={darkMode ? '#fff' : '#2c3e50'} 
-          />
-        </TouchableOpacity>
-        <Text style={[styles.title, darkMode && styles.titleDark]}>
-          Report Shelter Issue
-        </Text>
-        <View style={{ width: 24 }} />
-      </View>
-
+      
       <View style={styles.form}>
         <Text style={[styles.label, darkMode && styles.labelDark]}>
-          Select Shelter *
+          {t('shelterReport:selectShelter')}
         </Text>
         <View style={[styles.pickerContainer, darkMode && styles.pickerContainerDark]}>
           <Picker
@@ -120,34 +109,34 @@ function ShelterReportScreen({ navigation, route }) {
             style={[styles.picker, darkMode && styles.pickerDark]}
             dropdownIconColor={darkMode ? '#fff' : '#2c3e50'}
           >
-            <Picker.Item label="Select a shelter..." value="" color={darkMode ? '#888' : '#999'} />
+            <Picker.Item label={t('shelterReport:selectAShelter')} value="" color={darkMode ? '#333333' : '#999'} />
             {shelters.map((shelter) => (
               <Picker.Item
                 key={shelter.ID}
                 label={shelter.Name}
                 value={shelter.ID.toString()}
-                color={darkMode ? '#fff' : '#2c3e50'}
+                color={darkMode ? '#333333' : '#2c3e50'}
               />
             ))}
           </Picker>
         </View>
 
         {selectedShelter && (
-          <View style={styles.shelterInfo}>
+          <View style={[styles.shelterInfo, darkMode && styles.shelterInfoDark]}>
             <Text style={[styles.shelterInfoText, darkMode && styles.shelterInfoTextDark]}>
-              Location: {selectedShelter.Latitude}, {selectedShelter.Longitude}
+              {t('shelterReport:location')} {selectedShelter.Latitude}, {selectedShelter.Longitude}
             </Text>
           </View>
         )}
 
         <Text style={[styles.label, darkMode && styles.labelDark]}>
-          Issue Description *
+          {t('shelterReport:issueDescription')}
         </Text>
         <TextInput
           style={[styles.input, styles.textArea, darkMode && styles.inputDark]}
           value={report.issueDescription}
           onChangeText={(text) => setReport({ ...report, issueDescription: text })}
-          placeholder="Describe the issue (e.g., shelter is closed, damaged, etc.)"
+          placeholder={t('shelterReport:describeIssuePlaceholder')}
           placeholderTextColor={darkMode ? '#888' : '#999'}
           multiline
           numberOfLines={4}
@@ -168,7 +157,7 @@ function ShelterReportScreen({ navigation, route }) {
           ) : (
             <>
               <MaterialIcons name="send" size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Submit Report</Text>
+              <Text style={styles.submitButtonText}>{t('shelterReport:submitReport')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -238,6 +227,7 @@ const styles = StyleSheet.create({
   },
   pickerDark: {
     color: '#fff',
+    backgroundColor: '#2c2c2c',
   },
   shelterInfo: {
     backgroundColor: '#f8f9fa',

@@ -34,6 +34,8 @@ function Settings({ navigation, route }) {
     updateNotifications,
     updateMapType,
     updateDistanceUnit,
+    language,
+    updateLanguage,
   } = useSettings();
 
   // Load saved settings
@@ -46,7 +48,6 @@ function Settings({ navigation, route }) {
       const savedDarkMode = await AsyncStorage.getItem(STORAGE_KEYS.DARK_MODE);
       const savedNotifications = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
       const savedMapType = await AsyncStorage.getItem(STORAGE_KEYS.MAP_TYPE);
-      const savedLanguage = await AsyncStorage.getItem(STORAGE_KEYS.LANGUAGE);
       const savedDistanceUnit = await AsyncStorage.getItem(STORAGE_KEYS.DISTANCE_UNIT);
 
       updateDarkMode(savedDarkMode === 'true');
@@ -84,11 +85,6 @@ function Settings({ navigation, route }) {
     saveSetting(STORAGE_KEYS.MAP_TYPE, type);
   };
 
-  const handleLanguageChange = (lang) => {
-    i18n.changeLanguage(lang);
-    saveSetting(STORAGE_KEYS.LANGUAGE, lang);
-  };
-
   const handleDistanceUnitChange = (unit) => {
     updateDistanceUnit(unit);
     saveSetting(STORAGE_KEYS.DISTANCE_UNIT, unit);
@@ -103,13 +99,13 @@ function Settings({ navigation, route }) {
         >
           <MaterialIcons name="arrow-back" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
         </TouchableOpacity>
-        <Text style={[styles.title, darkMode && styles.titleDark]}>{t('title')}</Text>
+        <Text style={[styles.title, darkMode && styles.titleDark]}>{t('settings:title')}</Text>
       </View>
 
       {/* Account Settings */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>
-          {t('account')}
+          {t('settings:account')}
         </Text>
         
         <TouchableOpacity 
@@ -118,7 +114,7 @@ function Settings({ navigation, route }) {
         >
           <MaterialIcons name="lock-reset" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('resetPassword')}
+            {t('common:resetPassword')}
           </Text>
           <MaterialIcons name="chevron-right" size={24} color={darkMode ? '#95a5a6' : '#95a5a6'} />
         </TouchableOpacity>
@@ -127,13 +123,13 @@ function Settings({ navigation, route }) {
       {/* App Preferences */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>
-          {t('appPreferences')}
+          {t('settings:appPreferences')}
         </Text>
 
         <View style={[styles.settingItem, darkMode && styles.settingItemDark]}>
           <MaterialIcons name="dark-mode" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('darkMode')}
+            {t('settings:darkMode')}
           </Text>
           <Switch
             value={darkMode}
@@ -146,7 +142,7 @@ function Settings({ navigation, route }) {
         <View style={[styles.settingItem, darkMode && styles.settingItemDark]}>
           <MaterialIcons name="notifications" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('notifications')}
+            {t('settings:notifications')}
           </Text>
           <Switch
             value={notifications}
@@ -160,26 +156,26 @@ function Settings({ navigation, route }) {
       {/* Language Settings */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>
-          {t('language')}
+          {t('settings:language')}
         </Text>
 
         <TouchableOpacity 
           style={[styles.settingItem, darkMode && styles.settingItemDark]}
-          onPress={() => handleLanguageChange('he')}
+          onPress={() => updateLanguage('he')}
         >
           <MaterialIcons name="language" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            עברית {i18n.language === 'he' && '✓'}
+            עברית {language === 'he' && '✓'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={[styles.settingItem, darkMode && styles.settingItemDark]}
-          onPress={() => handleLanguageChange('en')}
+          onPress={() => updateLanguage('en')}
         >
           <MaterialIcons name="language" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            English {i18n.language === 'en' && '✓'}
+            English {language === 'en' && '✓'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -187,7 +183,7 @@ function Settings({ navigation, route }) {
       {/* Map Settings */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>
-          {t('mapSettings')}
+          {t('settings:mapSettings')}
         </Text>
 
         <TouchableOpacity 
@@ -196,7 +192,7 @@ function Settings({ navigation, route }) {
         >
           <MaterialIcons name="map" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('standardMap')} {mapType === 'standard' && '✓'}
+            {t('settings:standardMap')} {mapType === 'standard' && '✓'}
           </Text>
         </TouchableOpacity>
 
@@ -206,14 +202,14 @@ function Settings({ navigation, route }) {
         >
           <MaterialIcons name="satellite" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('satelliteMap')} {mapType === 'satellite' && '✓'}
+            {t('settings:satelliteMap')} {mapType === 'satellite' && '✓'}
           </Text>
         </TouchableOpacity>
 
         <View style={[styles.settingItem, darkMode && styles.settingItemDark]}>
           <MaterialIcons name="straighten" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
           <Text style={[styles.settingText, darkMode && styles.settingTextDark]}>
-            {t('distanceUnit')}
+            {t('settings:distanceUnit')}
           </Text>
           <View style={styles.unitSelector}>
             <TouchableOpacity 
