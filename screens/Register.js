@@ -108,7 +108,7 @@ function Register() {
             styles.userTypeButtonBlue,
             userType === 'Resident'
               ? styles.userTypeButtonBlueActive
-              : (darkMode ? styles.userTypeButtonOutlineDark : styles.userTypeButtonBlueOutline)
+              : (darkMode ? { backgroundColor: '#2c2c2c', borderColor: '#444' } : styles.userTypeButtonBlueOutline)
           ]}
           onPress={() => setUserType('Resident')}
         >
@@ -116,7 +116,7 @@ function Register() {
             styles.userTypeButtonText,
             userType === 'Resident'
               ? styles.userTypeButtonTextActive
-              : (darkMode ? styles.userTypeButtonTextOutlineDark : styles.userTypeButtonTextOutline)
+              : (darkMode ? { color: '#fff' } : styles.userTypeButtonTextOutline)
           ]}>
             {userType === 'Resident' ? '✓ ' : ''}{t('register:resident')}
           </Text>
@@ -126,7 +126,7 @@ function Register() {
             styles.userTypeButtonBlue,
             userType === 'Tourist'
               ? styles.userTypeButtonBlueActive
-              : (darkMode ? styles.userTypeButtonOutlineDark : styles.userTypeButtonBlueOutline)
+              : (darkMode ? { backgroundColor: '#2c2c2c', borderColor: '#444' } : styles.userTypeButtonBlueOutline)
           ]}
           onPress={() => setUserType('Tourist')}
         >
@@ -134,7 +134,7 @@ function Register() {
             styles.userTypeButtonText,
             userType === 'Tourist'
               ? styles.userTypeButtonTextActive
-              : (darkMode ? styles.userTypeButtonTextOutlineDark : styles.userTypeButtonTextOutline)
+              : (darkMode ? { color: '#fff' } : styles.userTypeButtonTextOutline)
           ]}>
             {userType === 'Tourist' ? '✓ ' : ''}{t('register:tourist')}
           </Text>
@@ -190,11 +190,11 @@ function Register() {
           {passwordRequirements.map((req, idx) => (
             <Text
               key={idx}
-              style={[
-                req.test(password)
-                  ? (darkMode ? styles.requirementMetDark : styles.requirementMet)
-                  : (darkMode ? styles.requirementUnmetDark : styles.requirementUnmet),
-              ]}
+              style={{
+                color: req.test(password)
+                  ? (darkMode ? '#3498db' : '#27ae60')
+                  : (darkMode ? '#95a5a6' : '#e74c3c'),
+              }}
             >
               • {req.label}
             </Text>
@@ -236,6 +236,7 @@ function Register() {
         ]}
         onPress={handleRegister}
         disabled={!canRegister}
+        testID="registerButton"
       >
         <Text style={[styles.buttonBlueText, darkMode && styles.buttonBlueTextDark]}>{t('register:registerButton')}</Text>
       </TouchableOpacity>

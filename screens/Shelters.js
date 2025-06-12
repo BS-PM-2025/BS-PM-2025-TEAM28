@@ -54,6 +54,7 @@ function Shelters({ navigation }) {
 <TouchableOpacity
   style={[styles.button, styles.blueButton]}
   onPress={() => navigation.navigate('AddShelter')}
+  testID="addShelterNavButton"
 >
   <Icon name="add" size={24} color="#fff" style={{ marginRight: 8 }} />
   <Text style={styles.buttonText}>Add Shelter</Text>

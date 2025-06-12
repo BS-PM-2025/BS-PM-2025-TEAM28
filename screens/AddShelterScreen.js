@@ -14,6 +14,7 @@ function AddShelterScreen({ navigation }) {
     newShelter.longitude.trim();
 
   const addShelter = async () => {
+    console.log('Attempting to add shelter. newShelter:', newShelter, 'allFieldsFilled:', allFieldsFilled);
     if (!allFieldsFilled) {
       Alert.alert(t('addShelter:allFieldsRequired'));
       return;
@@ -40,6 +41,7 @@ function AddShelterScreen({ navigation }) {
         placeholder={t('addShelter:shelterNamePlaceholder')}
         value={newShelter.name}
         onChangeText={(text) => setNewShelter({ ...newShelter, name: text })}
+        testID="shelterNameInput"
       />
       <TextInput
         style={styles.input}
@@ -47,6 +49,7 @@ function AddShelterScreen({ navigation }) {
         keyboardType="numeric"
         value={newShelter.latitude}
         onChangeText={(text) => setNewShelter({ ...newShelter, latitude: text })}
+        testID="latitudeInput"
       />
       <TextInput
         style={styles.input}
@@ -54,6 +57,7 @@ function AddShelterScreen({ navigation }) {
         keyboardType="numeric"
         value={newShelter.longitude}
         onChangeText={(text) => setNewShelter({ ...newShelter, longitude: text })}
+        testID="longitudeInput"
       />
       <TouchableOpacity
         style={[
@@ -62,6 +66,7 @@ function AddShelterScreen({ navigation }) {
         ]}
         onPress={addShelter}
         disabled={!allFieldsFilled}
+        testID="addShelterButton"
       >
         <Icon name="add" size={20} color="#fff" />
         <Text style={styles.saveButtonText}>{t('addShelter:add')}</Text>
