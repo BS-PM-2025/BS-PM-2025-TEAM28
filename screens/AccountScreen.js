@@ -7,6 +7,8 @@ import { useSettings } from '../contexts/SettingsContext';
 
 const SIDEBAR_WIDTH = 180;
 const STORAGE_KEY = 'noShelterText';
+const EMERGENCY_NUMBERS_KEY = 'emergencyNumbersText';
+const FIRST_AID_KEY = 'firstAidText';
 
 const DEFAULT_NO_SHELTER_TEXT =
   "🚨 No Shelter Nearby? Follow These Steps:\n" +
@@ -27,8 +29,7 @@ const DEFAULT_NO_SHELTER_TEXT =
   "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
-const EMERGENCY_NUMBERS_KEY = 'emergencyNumbersText';
-  const DEFAULT_EMERGENCY_NUMBERS_TEXT =
+const DEFAULT_EMERGENCY_NUMBERS_TEXT =
   "🚨 Emergency Numbers\n\n" +
   "🔥 Fire & Rescue Services\nPhone: 102\nCall in case of fires, smoke, building collapses, or other rescue situations.\n\n" +
   "🚑 Medical Emergency (Magen David Adom)\nPhone: 101\nCall for ambulance services, life-threatening injuries, or any urgent medical help.\n\n" +
@@ -39,6 +40,32 @@ const EMERGENCY_NUMBERS_KEY = 'emergencyNumbersText';
   "💬 Mental Health Support (Eran Organization)\nPhone: 1201\nFree emotional support in times of stress, anxiety, or trauma.\n\n" +
   "🛡️ Stay Safe. Stay Informed.\nUse our app to quickly locate the nearest shelter when an alert is received.";
 
+const DEFAULT_FIRST_AID_TEXT = 
+  "🆘 First Aid in Case of Rocket/Missile Strike\n\n" +
+  "In the event of a rocket or missile strike, act quickly and wisely to save lives:\n\n" +
+  "1. 📞 Call for Help\n" +
+  "- Immediately call Magen David Adom (MDA): 101.\n" +
+  "- Provide exact location, number of casualties, and injury types.\n\n" +
+  "2. 👁️ Assess the Situation\n" +
+  "- Make sure the area is safe before approaching.\n" +
+  "- Carefully approach the injured.\n\n" +
+  "3. 💨 Check Responsiveness and Breathing\n" +
+  "- Check if the person responds.\n" +
+  "- If not breathing – start CPR: 30 chest compressions + 2 rescue breaths.\n" +
+  "- If there's heavy bleeding – proceed to the next step.\n\n" +
+  "4. 🩸 Stop Bleeding\n" +
+  "- Apply direct pressure to the bleeding site using a clean cloth or bandage.\n" +
+  "- Raise the bleeding limb above heart level if possible.\n" +
+  "- Use a tourniquet only as a last resort in life-threatening bleeding.\n\n" +
+  "5. 🔥 Burn Care\n" +
+  "- Rinse burns with lukewarm water only (not cold or hot).\n" +
+  "- Do not apply creams or ointments.\n\n" +
+  "6. 🦴 Fractures and Injuries\n" +
+  "- Do not move a person if there's a suspected spinal injury.\n" +
+  "- Gently stabilize injured limbs until emergency services arrive.\n\n" +
+  "7. 💬 Emotional Support\n" +
+  "- Stay calm and speak in a reassuring tone.\n" +
+  "- Stay with the injured until help arrives.";
 
 function AccountScreen({ route, navigation }) {
   const { user } = route.params;
@@ -48,6 +75,8 @@ function AccountScreen({ route, navigation }) {
   const [noShelterText, setNoShelterText] = useState(DEFAULT_NO_SHELTER_TEXT);
   const [emergencyNumbersVisible, setEmergencyNumbersVisible] = useState(false);
   const [emergencyNumbersText, setEmergencyNumbersText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
+  const [firstAidVisible, setFirstAidVisible] = useState(false);
+  const [firstAidText, setFirstAidText] = useState(DEFAULT_FIRST_AID_TEXT);
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const isFocused = useIsFocused();
   
@@ -59,6 +88,9 @@ function AccountScreen({ route, navigation }) {
 
     const storedEmergency = await AsyncStorage.getItem(EMERGENCY_NUMBERS_KEY);
     setEmergencyNumbersText(storedEmergency || DEFAULT_EMERGENCY_NUMBERS_TEXT);
+
+    const storedFirstAid = await AsyncStorage.getItem(FIRST_AID_KEY);
+    setFirstAidText(storedFirstAid || DEFAULT_FIRST_AID_TEXT);
   })();
 }, [isFocused]);
 
@@ -131,14 +163,23 @@ function AccountScreen({ route, navigation }) {
               <Text style={styles.sidebarNoShelterButtonText}>No Shelter Nearby?</Text>
             </TouchableOpacity>
             <TouchableOpacity
-  style={[styles.sidebarButton, styles.sidebarButtonBlue]}
-  onPress={() => {
-    closeSidebar();
-    setEmergencyNumbersVisible(true);
-  }}
->
-  <Text style={styles.sidebarButtonText}>Emergency Numbers</Text>
-</TouchableOpacity>
+              style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+              onPress={() => {
+                closeSidebar();
+                setEmergencyNumbersVisible(true);
+              }}
+            >
+              <Text style={styles.sidebarButtonText}>Emergency Numbers</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+              onPress={() => {
+                closeSidebar();
+                setFirstAidVisible(true);
+              }}
+            >
+              <Text style={styles.sidebarButtonText}>First Aid</Text>
+            </TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -165,34 +206,64 @@ function AccountScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
-      {/* Emergency Numbers Modal */} 
+
+      {/* Emergency Numbers Modal */}
       <Modal
-  visible={emergencyNumbersVisible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setEmergencyNumbersVisible(false)}
->
-  <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
-    <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
-      <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
-        🚨 Emergency Numbers
-      </Text>
-      <ScrollView>
-        <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
-  {emergencyNumbersText}
-</Text>
-      </ScrollView>
-      <TouchableOpacity
-        style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
-        onPress={() => setEmergencyNumbersVisible(false)}
+        visible={emergencyNumbersVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEmergencyNumbersVisible(false)}
       >
-        <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
-          Close
-        </Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
+              🚨 Emergency Numbers
+            </Text>
+            <ScrollView>
+              <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
+                {emergencyNumbersText}
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
+              onPress={() => setEmergencyNumbersVisible(false)}
+            >
+              <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
+                Close
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* First Aid Modal */}
+      <Modal
+        visible={firstAidVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFirstAidVisible(false)}
+      >
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
+              🚑 First Aid Information
+            </Text>
+            <ScrollView>
+              <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
+                {firstAidText}
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
+              onPress={() => setFirstAidVisible(false)}
+            >
+              <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
+                Close
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
        <View style={[styles.header, darkMode && styles.headerDark]}>
