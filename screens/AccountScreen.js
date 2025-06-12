@@ -29,7 +29,7 @@ const DEFAULT_NO_SHELTER_TEXT =
   "If You're Outside and Far from Any Building\n\n" +
   "Lie flat on the ground and cover your head with your hands.";
 
-const DEFAULT_EMERGENCY_NUMBERS_TEXT =
+  const DEFAULT_EMERGENCY_NUMBERS_TEXT =
   "🚨 Emergency Numbers\n\n" +
   "🔥 Fire & Rescue Services\nPhone: 102\nCall in case of fires, smoke, building collapses, or other rescue situations.\n\n" +
   "🚑 Medical Emergency (Magen David Adom)\nPhone: 101\nCall for ambulance services, life-threatening injuries, or any urgent medical help.\n\n" +
@@ -163,13 +163,13 @@ function AccountScreen({ route, navigation }) {
               <Text style={styles.sidebarNoShelterButtonText}>No Shelter Nearby?</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.sidebarButton, styles.sidebarButtonBlue]}
-              onPress={() => {
-                closeSidebar();
-                setEmergencyNumbersVisible(true);
-              }}
-            >
-              <Text style={styles.sidebarButtonText}>Emergency Numbers</Text>
+  style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+  onPress={() => {
+    closeSidebar();
+    setEmergencyNumbersVisible(true);
+  }}
+>
+  <Text style={styles.sidebarButtonText}>Emergency Numbers</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
@@ -180,6 +180,15 @@ function AccountScreen({ route, navigation }) {
             >
               <Text style={styles.sidebarButtonText}>First Aid</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+              onPress={() => {
+                closeSidebar();
+                navigation.navigate('ShelterReport', { user });
+              }}
+            >
+              <Text style={styles.sidebarButtonText}>Shelter Report</Text>
+</TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -207,34 +216,34 @@ function AccountScreen({ route, navigation }) {
         </View>
       </Modal>
 
-      {/* Emergency Numbers Modal */}
+      {/* Emergency Numbers Modal */} 
       <Modal
-        visible={emergencyNumbersVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setEmergencyNumbersVisible(false)}
+  visible={emergencyNumbersVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setEmergencyNumbersVisible(false)}
+>
+  <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+    <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+      <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
+        🚨 Emergency Numbers
+      </Text>
+      <ScrollView>
+        <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
+  {emergencyNumbersText}
+</Text>
+      </ScrollView>
+      <TouchableOpacity
+        style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
+        onPress={() => setEmergencyNumbersVisible(false)}
       >
-        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
-          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
-            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>
-              🚨 Emergency Numbers
-            </Text>
-            <ScrollView>
-              <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>
-                {emergencyNumbersText}
-              </Text>
-            </ScrollView>
-            <TouchableOpacity
-              style={[styles.noShelterCloseButton, darkMode && styles.noShelterCloseButtonDark]}
-              onPress={() => setEmergencyNumbersVisible(false)}
-            >
-              <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
-                Close
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>
+          Close
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 
       {/* First Aid Modal */}
       <Modal

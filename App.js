@@ -20,6 +20,7 @@ import ShelterMapScreen from './screens/ShelterMapScreen';
 import AddressShelterScreen from './screens/AddressShelterScreen';
 import AddShelterScreen from './screens/AddShelterScreen';
 import SavedRouteScreen from './screens/SavedRouteScreen';
+import ShelterReportScreen from './screens/ShelterReportScreen';
 
 const Stack = createStackNavigator();
 
@@ -176,6 +177,13 @@ function Navigation() {
           }}
         />
         <Stack.Screen name="SavedRoute" component={SavedRouteScreen} />
+        <Stack.Screen 
+          name="ShelterReport" 
+          component={ShelterReportScreen}
+          options={{
+            title: 'Report Shelter Issue'
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

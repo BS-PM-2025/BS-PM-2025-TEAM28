@@ -74,36 +74,36 @@ function AdminScreen({ route, navigation }) {
   const [editText, setEditText] = useState(noShelterText);
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const [emergencyVisible, setEmergencyVisible] = useState(false);
-  const [emergencyEditMode, setEmergencyEditMode] = useState(false);
-  const [emergencyNumbersText, setEmergencyNumbersText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
-  const [emergencyEditText, setEmergencyEditText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
+const [emergencyEditMode, setEmergencyEditMode] = useState(false);
+const [emergencyNumbersText, setEmergencyNumbersText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
+const [emergencyEditText, setEmergencyEditText] = useState(DEFAULT_EMERGENCY_NUMBERS_TEXT);
   const [firstAidVisible, setFirstAidVisible] = useState(false);
   const [firstAidEditMode, setFirstAidEditMode] = useState(false);
   const [firstAidText, setFirstAidText] = useState(DEFAULT_FIRST_AID_TEXT);
   const [firstAidEditText, setFirstAidEditText] = useState(DEFAULT_FIRST_AID_TEXT);
 
-  useEffect(() => {
-    (async () => {
-      // Load "No Shelter Nearby" text
-      const storedNoShelter = await AsyncStorage.getItem(STORAGE_KEY);
-      if (storedNoShelter) {
-        setNoShelterText(storedNoShelter);
-        setEditText(storedNoShelter);
-      }
-      // Load Emergency Numbers text
-      const storedEmergency = await AsyncStorage.getItem(EMERGENCY_NUMBERS_KEY);
-      if (storedEmergency) {
-        setEmergencyNumbersText(storedEmergency);
-        setEmergencyEditText(storedEmergency);
-      }
+ useEffect(() => {
+  (async () => {
+    // Load "No Shelter Nearby" text
+    const storedNoShelter = await AsyncStorage.getItem(STORAGE_KEY);
+    if (storedNoShelter) {
+      setNoShelterText(storedNoShelter);
+      setEditText(storedNoShelter);
+    }
+    // Load Emergency Numbers text
+    const storedEmergency = await AsyncStorage.getItem(EMERGENCY_NUMBERS_KEY);
+    if (storedEmergency) {
+      setEmergencyNumbersText(storedEmergency);
+      setEmergencyEditText(storedEmergency);
+    }
       // Load First Aid text
       const storedFirstAid = await AsyncStorage.getItem(FIRST_AID_KEY);
       if (storedFirstAid) {
         setFirstAidText(storedFirstAid);
         setFirstAidEditText(storedFirstAid);
       }
-    })();
-  }, []);
+  })();
+}, []);
 
   const openSidebar = () => {
     setSidebarVisible(true);
@@ -143,10 +143,10 @@ function AdminScreen({ route, navigation }) {
   };
 
   const handleEmergencyEditSave = async () => {
-    setEmergencyNumbersText(emergencyEditText);
-    setEmergencyEditMode(false);
-    await AsyncStorage.setItem(EMERGENCY_NUMBERS_KEY, emergencyEditText);
-  };
+  setEmergencyNumbersText(emergencyEditText);
+  setEmergencyEditMode(false);
+  await AsyncStorage.setItem(EMERGENCY_NUMBERS_KEY, emergencyEditText);
+};
 
   const handleFirstAidEditSave = async () => {
     setFirstAidText(firstAidEditText);
@@ -200,13 +200,13 @@ function AdminScreen({ route, navigation }) {
               <Text style={styles.sidebarNoShelterButtonText}>No Shelter Nearby?</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.sidebarButton, styles.sidebarButtonBlue]}
-              onPress={() => {
-                closeSidebar();
-                setEmergencyVisible(true);
-              }}
-            >
-              <Text style={styles.sidebarNoShelterButtonText}>Emergency Numbers</Text>
+  style={[styles.sidebarButton, styles.sidebarButtonBlue]}
+  onPress={() => {
+    closeSidebar();
+    setEmergencyVisible(true);
+  }}
+>
+  <Text style={styles.sidebarNoShelterButtonText}>Emergency Numbers</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
@@ -215,8 +215,8 @@ function AdminScreen({ route, navigation }) {
                 setFirstAidVisible(true);
               }}
             >
-              <Text style={styles.sidebarNoShelterButtonText}>First Aid</Text>
-            </TouchableOpacity>
+              <Text style={styles.sidebarButtonText}>First Aid</Text>
+</TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -284,68 +284,68 @@ function AdminScreen({ route, navigation }) {
         </View>
       </Modal>
 
-      {/* Emergency Numbers Modal */}
+      {/* Emergency Numbers Modal */} 
       <Modal
-        visible={emergencyVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {
-          setEmergencyVisible(false);
-          setEmergencyEditMode(false);
-        }}
-      >
-        <View style={styles.noShelterOverlay}>
-          <View style={styles.noShelterModal}>
-            <Text style={styles.noShelterTitle}>🚨 Emergency Numbers</Text>
-            <ScrollView>
-              {emergencyEditMode ? (
-                <TextInput
-                  style={styles.noShelterEditInput}
-                  multiline
-                  value={emergencyEditText}
-                  onChangeText={setEmergencyEditText}
-                  textAlignVertical="top"
-                />
-              ) : (
-                <Text style={styles.noShelterText}>{emergencyNumbersText}</Text>
-              )}
-            </ScrollView>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              {emergencyEditMode ? (
-                <>
-                  <TouchableOpacity
-                    style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
-                    onPress={handleEmergencyEditSave}
-                  >
-                    <Text style={styles.noShelterCloseButtonText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
-                    onPress={() => setEmergencyEditMode(false)}
-                  >
-                    <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
-                    onPress={() => setEmergencyVisible(false)}
-                  >
-                    <Text style={styles.noShelterCloseButtonText}>Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
-                    onPress={() => setEmergencyEditMode(true)}
-                  >
-                    <Text style={styles.noShelterCloseButtonText}>Edit</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
+  visible={emergencyVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => {
+    setEmergencyVisible(false);
+    setEmergencyEditMode(false);
+  }}
+>
+  <View style={styles.noShelterOverlay}>
+    <View style={styles.noShelterModal}>
+      <Text style={styles.noShelterTitle}>🚨 Emergency Numbers</Text>
+      <ScrollView>
+        {emergencyEditMode ? (
+          <TextInput
+            style={styles.noShelterEditInput}
+            multiline
+            value={emergencyEditText}
+            onChangeText={setEmergencyEditText}
+            textAlignVertical="top"
+          />
+        ) : (
+          <Text style={styles.noShelterText}>{emergencyNumbersText}</Text>
+        )}
+      </ScrollView>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+        {emergencyEditMode ? (
+          <>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
+              onPress={handleEmergencyEditSave}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
+              onPress={() => setEmergencyEditMode(false)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
+              onPress={() => setEmergencyVisible(false)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
+              onPress={() => setEmergencyEditMode(true)}
+            >
+              <Text style={styles.noShelterCloseButtonText}>Edit</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </View>
+  </View>
+</Modal>
 
       {/* First Aid Modal */}
       <Modal

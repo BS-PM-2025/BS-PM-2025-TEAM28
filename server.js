@@ -574,6 +574,54 @@ app.delete('/api/saved-routes/:id', async (req, res) => {
   }
 });
 
+// Shelter Report endpoint
+app.post('/api/send-shelter-report', async (req, res) => {
+  const { shelterName, shelterAddress, issueDescription, reporterName, reporterEmail, to, subject } = req.body;
+
+  if (!shelterName || !shelterAddress || !issueDescription || !reporterName || !reporterEmail) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'All fields are required' 
+    });
+  }
+
+  const mailOptions = {
+    from: 'FMS <onlinelibrary6565@gmail.com>',
+    to: to || 'onlinelibrary6565@gmail.com',
+    subject: subject || 'Shelter Report',
+    text: `
+Shelter Report Details:
+
+Shelter Name: ${shelterName}
+Shelter Address: ${shelterAddress}
+
+Issue Description:
+${issueDescription}
+
+Reported by:
+Name: ${reporterName}
+Email: ${reporterEmail}
+
+Date: ${new Date().toLocaleString()}
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Shelter report email sent successfully');
+    res.json({ 
+      success: true, 
+      message: 'Report submitted successfully' 
+    });
+  } catch (error) {
+    console.error('Error sending shelter report email:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to submit report' 
+    });
+  }
+});
+
 const startServer = async () => {
   try {
     await sql.connect(dbConfig);
