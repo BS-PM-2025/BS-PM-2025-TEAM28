@@ -69,7 +69,14 @@ function AccountScreen({ route, navigation }) {
         onRequestClose={closeSidebar}
       >
         <Pressable style={styles.sidebarOverlay} onPress={closeSidebar}>
-          <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }, darkMode && styles.sidebarDark]}>
+          <Animated.View 
+            style={[
+              styles.sidebar,
+              { transform: [{ translateX: slideAnim }] },
+              darkMode && styles.sidebarDark
+            ]}
+            testID="sidebar"
+          >
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
               onPress={() => {
@@ -221,11 +228,12 @@ function AccountScreen({ route, navigation }) {
 
       <ScrollView style={[styles.container, darkMode && styles.containerDark]}>
        <View style={[styles.header, darkMode && styles.headerDark]}>
-  <TouchableOpacity
-    style={styles.iconButton}
+  <TouchableOpacity 
+    style={styles.menuButton} 
     onPress={openSidebar}
+    testID="menu-button"
   >
-    <MaterialIcons name="menu" size={32} color={darkMode ? '#fff' : '#2c3e50'} />
+    <MaterialIcons name="menu" size={24} color={darkMode ? '#fff' : '#2c3e50'} />
   </TouchableOpacity>
   <Text style={[styles.title, darkMode && styles.titleDark]}>{t('account:title')}</Text>
   {/* Empty view for spacing */}
@@ -320,7 +328,7 @@ header: {
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
-  iconButton: {
+  menuButton: {
     padding: 8,
   },
   welcomeText: {
@@ -369,7 +377,7 @@ header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
   },
   blueButton: {
     backgroundColor: '#007bff',

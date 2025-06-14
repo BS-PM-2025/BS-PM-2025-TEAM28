@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Pre
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
+import { useSettings } from '../contexts/SettingsContext';
 
 const SIDEBAR_WIDTH = 150;
 const STORAGE_KEY = 'noShelterText';
@@ -11,6 +12,7 @@ const FIRST_AID_KEY = 'firstAidText';
 
 function AdminScreen({ route, navigation }) {
   const { t } = useTranslation();
+  const { darkMode } = useSettings();
   const { user } = route.params;
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [noShelterVisible, setNoShelterVisible] = useState(false);
@@ -96,7 +98,7 @@ function AdminScreen({ route, navigation }) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={[styles.container, darkMode && styles.containerDark]}>
       {/* Sidebar Modal */}
       <Modal
         visible={sidebarVisible}
@@ -107,6 +109,7 @@ function AdminScreen({ route, navigation }) {
         <Pressable style={styles.sidebarOverlay} onPress={closeSidebar}>
           <Animated.View style={[
             styles.sidebar,
+            darkMode && styles.sidebarDark,
             {
               left: 0,
               right: undefined,
@@ -120,7 +123,7 @@ function AdminScreen({ route, navigation }) {
                 navigation.navigate('Settings', { user });
               }}
             >
-              <Text style={styles.sidebarButtonText}>{t('common:settings')}</Text>
+              <Text style={[styles.sidebarButtonText, darkMode && styles.sidebarButtonTextDark]}>{t('common:settings')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
@@ -129,7 +132,7 @@ function AdminScreen({ route, navigation }) {
                 setNoShelterVisible(true);
               }}
             >
-              <Text style={styles.sidebarNoShelterButtonText}>{t('common:noShelterNearby')}</Text>
+              <Text style={[styles.sidebarNoShelterButtonText, darkMode && styles.sidebarNoShelterButtonTextDark]}>{t('common:noShelterNearby')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
@@ -138,7 +141,7 @@ function AdminScreen({ route, navigation }) {
                 setEmergencyVisible(true);
               }}
             >
-              <Text style={styles.sidebarNoShelterButtonText}>{t('common:emergencyNumbers')}</Text>
+              <Text style={[styles.sidebarNoShelterButtonText, darkMode && styles.sidebarNoShelterButtonTextDark]}>{t('common:emergencyNumbers')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sidebarButton, styles.sidebarButtonBlue]}
@@ -147,7 +150,7 @@ function AdminScreen({ route, navigation }) {
                 setFirstAidVisible(true);
               }}
             >
-              <Text style={styles.sidebarButtonText}>{t('common:firstAid')}</Text>
+              <Text style={[styles.sidebarButtonText, darkMode && styles.sidebarButtonTextDark]}>{t('common:firstAid')}</Text>
             </TouchableOpacity>
             
             {/* Spacer to push logout to bottom */}
@@ -160,7 +163,7 @@ function AdminScreen({ route, navigation }) {
                 handleLogout();
               }}
             >
-              <Text style={styles.sidebarButtonText}>{t('common:logout')}</Text>
+              <Text style={[styles.sidebarButtonText, darkMode && styles.sidebarButtonTextDark]}>{t('common:logout')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </Pressable>
@@ -176,20 +179,21 @@ function AdminScreen({ route, navigation }) {
           setEditMode(false);
         }}
       >
-        <View style={styles.noShelterOverlay}>
-          <View style={styles.noShelterModal}>
-            <Text style={styles.noShelterTitle}>🚨 No Shelter Nearby? Follow These Steps:</Text>
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>🚨 No Shelter Nearby? Follow These Steps:</Text>
             <ScrollView>
               {editMode ? (
                 <TextInput
-                  style={styles.noShelterEditInput}
+                  style={[styles.noShelterEditInput, darkMode && styles.noShelterEditInputDark]}
                   multiline
                   value={editText}
                   onChangeText={setEditText}
                   textAlignVertical="top"
+                  placeholderTextColor={darkMode ? '#999' : '#666'}
                 />
               ) : (
-                <Text style={styles.noShelterText}>{noShelterText}</Text>
+                <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>{noShelterText}</Text>
               )}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
@@ -199,13 +203,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={handleEditSave}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Save</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Save</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
                     onPress={() => setEditMode(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Cancel</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -214,13 +218,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={() => setNoShelterVisible(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Close</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
                     onPress={() => setEditMode(true)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Edit</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Edit</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -239,20 +243,21 @@ function AdminScreen({ route, navigation }) {
           setEmergencyEditMode(false);
         }}
       >
-        <View style={styles.noShelterOverlay}>
-          <View style={styles.noShelterModal}>
-            <Text style={styles.noShelterTitle}>🚨 Emergency Numbers</Text>
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>🚨 Emergency Numbers</Text>
             <ScrollView>
               {emergencyEditMode ? (
                 <TextInput
-                  style={styles.noShelterEditInput}
+                  style={[styles.noShelterEditInput, darkMode && styles.noShelterEditInputDark]}
                   multiline
                   value={emergencyEditText}
                   onChangeText={setEmergencyEditText}
                   textAlignVertical="top"
+                  placeholderTextColor={darkMode ? '#999' : '#666'}
                 />
               ) : (
-                <Text style={styles.noShelterText}>{emergencyNumbersText}</Text>
+                <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>{emergencyNumbersText}</Text>
               )}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
@@ -262,13 +267,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={handleEmergencyEditSave}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Save</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Save</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
                     onPress={() => setEmergencyEditMode(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Cancel</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -277,13 +282,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={() => setEmergencyVisible(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Close</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
                     onPress={() => setEmergencyEditMode(true)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Edit</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Edit</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -302,20 +307,21 @@ function AdminScreen({ route, navigation }) {
           setFirstAidEditMode(false);
         }}
       >
-        <View style={styles.noShelterOverlay}>
-          <View style={styles.noShelterModal}>
-            <Text style={styles.noShelterTitle}>🚑 First Aid Information</Text>
+        <View style={[styles.noShelterOverlay, darkMode && styles.noShelterOverlayDark]}>
+          <View style={[styles.noShelterModal, darkMode && styles.noShelterModalDark]}>
+            <Text style={[styles.noShelterTitle, darkMode && styles.noShelterTitleDark]}>🚑 First Aid Information</Text>
             <ScrollView>
               {firstAidEditMode ? (
                 <TextInput
-                  style={styles.noShelterEditInput}
+                  style={[styles.noShelterEditInput, darkMode && styles.noShelterEditInputDark]}
                   multiline
                   value={firstAidEditText}
                   onChangeText={setFirstAidEditText}
                   textAlignVertical="top"
+                  placeholderTextColor={darkMode ? '#999' : '#666'}
                 />
               ) : (
-                <Text style={styles.noShelterText}>{firstAidText}</Text>
+                <Text style={[styles.noShelterText, darkMode && styles.noShelterTextDark]}>{firstAidText}</Text>
               )}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
@@ -325,13 +331,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={handleFirstAidEditSave}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Save</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Save</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#aaa' }]}
                     onPress={() => setFirstAidEditMode(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Cancel</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Cancel</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -340,13 +346,13 @@ function AdminScreen({ route, navigation }) {
                     style={[styles.noShelterCloseButton, { flex: 1, marginRight: 5 }]}
                     onPress={() => setFirstAidVisible(false)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Close</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.noShelterCloseButton, { flex: 1, marginLeft: 5, backgroundColor: '#0066e6' }]}
                     onPress={() => setFirstAidEditMode(true)}
                   >
-                    <Text style={styles.noShelterCloseButtonText}>Edit</Text>
+                    <Text style={[styles.noShelterCloseButtonText, darkMode && styles.noShelterCloseButtonTextDark]}>Edit</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -355,30 +361,34 @@ function AdminScreen({ route, navigation }) {
         </View>
       </Modal>
 
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
+      <ScrollView style={[styles.content, darkMode && styles.contentDark]}>
+        <View style={[styles.header, darkMode && styles.headerDark]}>
           {/* Sidebar icon on the left */}
           <TouchableOpacity
             style={styles.iconButton}
             onPress={openSidebar}
           >
-            <MaterialIcons name="menu" size={28} color="#2c3e50" />
+            <MaterialIcons name="menu" size={28} color={darkMode ? '#fff' : '#2c3e50'} />
           </TouchableOpacity>
-          <Text style={styles.title}>{t('admin:title')}</Text>
+          <Text style={[styles.title, darkMode && styles.titleDark]}>{t('admin:title')}</Text>
           <View style={styles.headerButtons} />
         </View>
 
-        <Text style={styles.welcomeText}>{t('admin:welcome', { name: user.Name })}</Text>
+        <Text style={[styles.welcomeText, darkMode && styles.welcomeTextDark]}>
+          {t('admin:welcome', { name: user.Name })}
+        </Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('admin:adminControls')}</Text>
+        <View style={[styles.section, darkMode && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, darkMode && styles.sectionTitleDark]}>
+            {t('admin:adminControls')}
+          </Text>
 
           <TouchableOpacity
             style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('ShelterMap')}
           >
             <MaterialIcons name="my-location" size={24} color="white" />
-            <Text style={styles.buttonText}>{t('common:findClosestShelter')}</Text>
+            <Text style={[styles.buttonText, darkMode && styles.buttonTextDark]}>{t('common:findClosestShelter')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -386,21 +396,21 @@ function AdminScreen({ route, navigation }) {
             onPress={() => navigation.navigate('Shelters')}
           >
             <Image source={require('../assets/shield.png')} style={styles.shieldIcon} />
-            <Text style={styles.buttonText}>{t('common:manageShelters')}</Text>
+            <Text style={[styles.buttonText, darkMode && styles.buttonTextDark]}>{t('common:manageShelters')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('ManageUsers', { adminId: user.ID })}
           >
             <Image source={require('../assets/settings_account_box.png')} style={styles.shieldIcon} />
-            <Text style={styles.buttonText}>{t('common:manageUsers')}</Text>
+            <Text style={[styles.buttonText, darkMode && styles.buttonTextDark]}>{t('common:manageUsers')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('AddressShelter', { user })}
           >
             <MaterialIcons name="location-on" size={24} color="white" />
-            <Text style={styles.buttonText}>{t('common:findShelterByAddress')}</Text>
+            <Text style={[styles.buttonText, darkMode && styles.buttonTextDark]}>{t('common:findShelterByAddress')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -413,43 +423,60 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
+  content: {
+    flex: 1,
+  },
+  contentDark: {
+    backgroundColor: '#1a1a1a',
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 20,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  headerDark: {
+    backgroundColor: '#2c2c2c',
+    borderBottomColor: '#333',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginLeft: 20,
   },
-  headerButtons: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  iconButton: {
-    padding: 8,
+  titleDark: {
+    color: '#fff',
   },
   welcomeText: {
     fontSize: 18,
     color: '#2c3e50',
-    padding: 20,
-    paddingBottom: 0,
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  welcomeTextDark: {
+    color: '#fff',
   },
   section: {
     padding: 20,
+    backgroundColor: '#fff',
+  },
+  sectionDark: {
+    backgroundColor: '#1a1a1a',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  sectionTitleDark: {
+    color: '#fff',
   },
   button: {
     backgroundColor: '#27ae60',
@@ -459,7 +486,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 15,
+    marginBottom: 8,
   },
   blueButton: {
     backgroundColor: '#0066e6',
@@ -479,59 +506,40 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  buttonTextDark: {
+    color: '#fff',
+  },
   shieldIcon: {
     width: 24,
     height: 24,
     marginRight: 10,
   },
-  sidebarOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    flexDirection: 'row',
-  },
   sidebar: {
-    width: SIDEBAR_WIDTH,
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
+    width: SIDEBAR_WIDTH,
+    backgroundColor: '#fff',
+    padding: 20,
+    paddingTop: 50,
+    elevation: 5,
   },
-  sidebarButton: {
-    padding: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 15,
-    width: '100%',
+  sidebarDark: {
+    backgroundColor: '#2c2c2c',
   },
-  sidebarButtonBlue: {
-    backgroundColor: '#0066e6',
+  sidebarOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  sidebarButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  sidebarNoShelterButtonText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  // No Shelter Modal styles
   noShelterOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  noShelterOverlayDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   noShelterModal: {
     backgroundColor: '#fff',
@@ -541,6 +549,9 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     elevation: 8,
   },
+  noShelterModalDark: {
+    backgroundColor: '#2c2c2c',
+  },
   noShelterTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -548,14 +559,16 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     textAlign: 'center',
   },
+  noShelterTitleDark: {
+    color: '#ff6b6b',
+  },
   noShelterText: {
     fontSize: 16,
     color: '#2c3e50',
     marginBottom: 16,
   },
-  noShelterStep: {
-    fontWeight: 'bold',
-    color: '#1565c0',
+  noShelterTextDark: {
+    color: '#fff',
   },
   noShelterEditInput: {
     fontSize: 16,
@@ -567,6 +580,11 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 16,
     backgroundColor: '#f8f9fa',
+  },
+  noShelterEditInputDark: {
+    backgroundColor: '#333',
+    borderColor: '#404040',
+    color: '#fff',
   },
   noShelterCloseButton: {
     backgroundColor: '#1565c0',
@@ -580,6 +598,37 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  noShelterCloseButtonTextDark: {
+    color: '#fff',
+  },
+  sidebarButton: {
+    padding: 15,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    width: '100%',
+  },
+  sidebarButtonBlue: {
+    backgroundColor: '#0066e6',
+  },
+  sidebarButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  sidebarButtonTextDark: {
+    color: '#fff',
+  },
+  sidebarNoShelterButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  sidebarNoShelterButtonTextDark: {
+    color: '#fff',
   },
 });
 

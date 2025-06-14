@@ -15,15 +15,15 @@ function HomeScreen({ navigation }) {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, styles.shelterButton]}
+            style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('ShelterMap')}
           >
-            <MaterialIcons name="location-on" size={24} color="white" />
+            <MaterialIcons name="my-location" size={24} color="white" />
             <Text style={styles.buttonText}>{t('common:findClosestShelter')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('Register')}
           >
             <MaterialIcons name="person-add" size={24} color="white" />
@@ -31,7 +31,7 @@ function HomeScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.loginButton]}
+            style={[styles.button, styles.blueButton]}
             onPress={() => navigation.navigate('Login')}
           >
             <MaterialIcons name="login" size={24} color="white" />
@@ -46,7 +46,7 @@ function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#ffffff',
   },
   content: {
     flex: 1,
@@ -56,42 +56,38 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    color: 'white',
+    color: 'black',
     marginBottom: 10,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
-    color: '#cccccc',
+    color: '#000000',
     marginBottom: 40,
     textAlign: 'center',
   },
   buttonContainer: {
     width: '100%',
     maxWidth: 300,
-    gap: 20,
+    gap: 4,
   },
   button: {
-    backgroundColor: '#2c3e50',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
+    padding: 15,
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    marginBottom: 8,
   },
-  loginButton: {
-    backgroundColor: '#27ae60',
-  },
-  shelterButton: {
-    backgroundColor: '#e74c3c',
+  blueButton: {
+    backgroundColor: '#007bff',
   },
   buttonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
 });
 

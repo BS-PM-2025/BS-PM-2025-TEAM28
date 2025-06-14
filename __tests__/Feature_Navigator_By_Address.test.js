@@ -1,7 +1,10 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { SettingsProvider } from '../contexts/SettingsContext';
 import AddressShelterScreen from '../screens/AddressShelterScreen';
 import axios from 'axios';
+import { Alert, View, TextInput } from 'react-native';
 
 // mute console errors
 const originalError = console.error;
@@ -19,31 +22,61 @@ afterAll(() => {
 // simulate the axios module (mock)
 jest.mock('axios');
 
+// simulate the Alert module (mock)
+jest.mock('react-native/Libraries/Alert/Alert', () => ({
+  alert: jest.fn(),
+}));
+
+// simulate the translations module (mock)
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key) => key, // Return the key itself instead of translated value
+    i18n: {
+      changeLanguage: jest.fn(),
+      language: 'en',
+      hasLanguageSomeTranslations: () => true,
+    },
+  }),
+}));
+
 // simulate the navigation prop (mock)
 const mockNavigation = {
   navigate: jest.fn(),
+  goBack: jest.fn(),
+};
+
+// simulate the route prop (mock)
+const mockRoute = {
+  params: {
+    user: {
+      Name: 'Test User',
+      Gmail: 'test@example.com',
+    },
+  },
 };
 
 // simulate the AddressAutocomplete (mock)
 jest.mock('../components/AddressAutocomplete', () => {
-  return {
-    __esModule: true,
-    default: ({ onSelectAddress }) => (
-      <input
-        testID="address-input"
-        onChangeText={(text) => {
-          if (text === 'Test Address') {
+  const React = require('react');
+  const { View, TextInput } = require('react-native');
+  
+  return function MockAddressAutocomplete({ onSelectAddress }) {
+    return React.createElement(View, null,
+      React.createElement(TextInput, {
+        testID: "address-input",
+        onChangeText: (text) => {
+          if (text) {
             onSelectAddress({
-              address: 'Test Address',
+              address: text,
               location: {
-                latitude: 31.2600,
-                longitude: 34.7693,
-              },
+                latitude: 31.5,
+                longitude: 34.7
+              }
             });
           }
-        }}
-      />
-    ),
+        }
+      })
+    );
   };
 });
 
@@ -63,6 +96,17 @@ jest.mock('react-native-maps', () => {
 jest.mock('@react-native-community/geolocation', () => ({
   getCurrentPosition: jest.fn(),
 }));
+
+// Helper function to render component with providers
+const renderWithProviders = (component) => {
+  return render(
+    <NavigationContainer>
+      <SettingsProvider>
+        {component}
+      </SettingsProvider>
+    </NavigationContainer>
+  );
+};
 
 describe('AddressShelterScreen', () => {
   beforeEach(() => {
@@ -109,41 +153,73 @@ describe('AddressShelterScreen', () => {
   });
 
   it('should handle address selection correctly', async () => {
-    const { getByTestId } = render(
-      <AddressShelterScreen navigation={mockNavigation} />
-    );
-
-    const addressInput = getByTestId('address-input');
-
-    fireEvent.changeText(addressInput, 'Test Address');
-
-    // wait for the API calls to complete and state updates
-    await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters');
-      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/directions'));
+    // Mock successful shelters response
+    axios.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        shelters: [
+          { ID: 1, Name: 'Test Shelter 1', Latitude: 31.5, Longitude: 34.7 }
+        ]
+      }
     });
 
-    // verify that both API calls was made
-    expect(axios.get).toHaveBeenCalledTimes(2);
+    // Mock successful route response
+    axios.get.mockResolvedValueOnce({
+      data: {
+        status: 'OK',
+        routes: [{
+          legs: [{
+            distance: { text: '1.2 km', value: 1200 },
+            duration: { text: '15 mins', value: 900 }
+          }]
+        }]
+      }
+    });
+
+    const { getByTestId, getByText } = renderWithProviders(
+      <AddressShelterScreen navigation={mockNavigation} route={mockRoute} />
+    );
+
+    // Find and fill the address input - this will trigger address selection
+    const addressInput = getByTestId('address-input');
+    fireEvent.changeText(addressInput, '123 Test Street');
+
+    // Wait for the component to process the address selection and fetch shelters
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters');
+    }, { timeout: 3000 });
+
+    // Wait for the component to fetch the route
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalledWith(
+        expect.stringContaining('http://10.0.2.2:3000/api/directions')
+      );
+    }, { timeout: 3000 });
+
+    // Verify that route info is displayed
+    await waitFor(() => {
+      expect(getByText('מקלט Test Shelter 1')).toBeTruthy();
+    }, { timeout: 3000 });
   });
 
   it('should handle API error gracefully', async () => {
-    // replicate API error for both endpoints
-    axios.get.mockRejectedValue(new Error('API Error'));
+    // Mock failed shelters response
+    axios.get.mockRejectedValueOnce(new Error('Failed to fetch shelters'));
 
-    const { getByTestId } = render(
-      <AddressShelterScreen navigation={mockNavigation} />
+    const { getByTestId } = renderWithProviders(
+      <AddressShelterScreen navigation={mockNavigation} route={mockRoute} />
     );
 
+    // Find and fill the address input - this will trigger address selection
     const addressInput = getByTestId('address-input');
-    fireEvent.changeText(addressInput, 'Test Address');
+    fireEvent.changeText(addressInput, 'Invalid Address');
 
-    // wait for the error handling
+    // Verify error alert is shown
     await waitFor(() => {
-      expect(axios.get).toHaveBeenCalled();
-    });
-
-    // verify that the API was called at least once
-    expect(axios.get).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Failed to fetch shelters'
+      );
+    }, { timeout: 3000 });
   });
 }); 

@@ -108,7 +108,7 @@ function Navigation() {
   }
 
   return (
-    <NavigationContainer key={i18n.language} theme={darkMode ? CustomDarkTheme : CustomLightTheme}>
+    <NavigationContainer theme={darkMode ? CustomDarkTheme : CustomLightTheme}>
       <Stack.Navigator 
         initialRouteName={initialRoute}
         screenOptions={{
@@ -121,9 +121,27 @@ function Navigation() {
           },
         }}
       >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="Login" component={Login} /> 
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen}
+          options={({ navigation, route }) => ({
+            title: t('home:title')
+          })}
+        />
+        <Stack.Screen 
+          name="Register" 
+          component={Register}
+          options={({ navigation, route }) => ({
+            title: t('common:register')
+          })}
+        />
+        <Stack.Screen 
+          name="Login" 
+          component={Login}
+          options={({ navigation, route }) => ({
+            title: t('common:login')
+          })}
+        />
         <Stack.Screen 
           name="ShelterMap" 
           component={ShelterMapScreen}

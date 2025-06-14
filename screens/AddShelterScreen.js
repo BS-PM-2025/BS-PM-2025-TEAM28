@@ -25,8 +25,12 @@ function AddShelterScreen({ navigation }) {
         Latitude: parseFloat(newShelter.latitude),
         Longitude: parseFloat(newShelter.longitude),
       });
-      Alert.alert(t('addShelter:successTitle'), response.data.message);
-      navigation.goBack();
+      Alert.alert(t('addShelter:successTitle'), response.data.message, [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('Shelters', { refresh: true })
+        }
+      ]);
     } catch (error) {
       console.error('Error adding shelter:', error);
       Alert.alert(t('common:error'), error.response?.data?.message || t('addShelter:failedToAddShelter'));

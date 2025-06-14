@@ -65,13 +65,14 @@ export default function ForgotPassword({ navigation }) {
     }
 
     try {
-      const res = await axios.post('http://10.0.2.2:3000/api/reset-password', {
+      const res = await axios.post('http://10.0.2.2:3000/api/reset-password-with-code', {
         email,
         code,
         newPassword,
       });
-      Alert.alert('Success', res.data.message);
-      navigation.navigate('Login');
+      Alert.alert('Success', res.data.message, [
+        { text: 'OK', onPress: () => navigation.navigate('Login') }
+      ]);
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to reset password');
     }

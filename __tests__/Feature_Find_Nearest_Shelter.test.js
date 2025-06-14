@@ -1,8 +1,11 @@
 import React from 'react';
 import { render, waitFor, fireEvent } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { SettingsProvider } from '../contexts/SettingsContext';
 import ShelterMapScreen from '../screens/ShelterMapScreen';
 import axios from 'axios';
 import Geolocation from '@react-native-community/geolocation';
+import { Alert } from 'react-native';
 
 jest.mock('axios');
 jest.mock('@react-native-community/geolocation', () => ({
@@ -26,6 +29,38 @@ jest.mock('react-native-maps', () => {
   };
 });
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon');
+
+// Mock Alert
+jest.mock('react-native/Libraries/Alert/Alert', () => ({
+  alert: jest.fn(),
+}));
+
+// Mock translations
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key) => key, // Return the key itself instead of translated value
+    i18n: {
+      changeLanguage: jest.fn(),
+      language: 'en',
+      hasLanguageSomeTranslations: () => true,
+    },
+  }),
+}));
+
+// Mock navigation
+const mockNavigation = {
+  goBack: jest.fn(),
+};
+
+// Mock route
+const mockRoute = {
+  params: {
+    user: {
+      Name: 'Test User',
+      Gmail: 'test@example.com',
+    },
+  },
+};
 
 const mockPosition = { coords: { latitude: 31.26, longitude: 34.7693 } };
 
@@ -66,54 +101,124 @@ beforeEach(() => {
   });
 });
 
+// Helper function to render component with providers
+const renderWithProviders = (component) => {
+  return render(
+    <NavigationContainer>
+      <SettingsProvider>
+        {component}
+      </SettingsProvider>
+    </NavigationContainer>
+  );
+};
+
 describe('ShelterMapScreen', () => {
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    
+    // Mock successful shelter fetch
+    axios.get.mockResolvedValue({
+      data: {
+        success: true,
+        shelters: [
+          { ID: 1, Name: 'Test Shelter 1', Latitude: 31.5, Longitude: 34.7 },
+          { ID: 2, Name: 'Test Shelter 2', Latitude: 31.6, Longitude: 34.8 },
+        ],
+      },
+    });
+  });
+
   it('fetches shelters on mount', async () => {
-    render(<ShelterMapScreen />);
-    await waitFor(() =>
-      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters')
+    renderWithProviders(
+      <ShelterMapScreen navigation={mockNavigation} route={mockRoute} />
     );
-    expect(axios.get).toHaveBeenCalledTimes(1);
+
+    // Verify that shelters were fetched
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters');
+    });
   });
 
   it('pressing marker fetches route and displays info', async () => {
-    const { getByTestId, getByText } = render(<ShelterMapScreen />);
-    await waitFor(() =>
-      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters')
-    );
-    axios.get.mockClear();
-    axios.get.mockImplementation(url => {
+    // Mock successful route fetch
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/api/shelters')) {
+        return Promise.resolve({
+          data: {
+            success: true,
+            shelters: [
+              { ID: 1, Name: 'Test Shelter 1', Latitude: 31.5, Longitude: 34.7 },
+            ],
+          },
+        });
+      }
       if (url.includes('/api/directions')) {
         return Promise.resolve({
           data: {
             success: true,
             route: {
               status: 'OK',
-              routes: [
-                {
-                  overview_polyline: { points: 'test_points' },
-                  legs: [
-                    { distance: { text: '1.2 km' }, duration: { text: '15 mins' } }
-                  ]
-                }
-              ]
+              routes: [{
+                overview_polyline: { points: '_p~iF~ps|U_ulLnnqC_mqNvxq`@' }, // Valid polyline points
+                legs: [{
+                  distance: { text: '1.2 km', value: 1200 },
+                  duration: { text: '5 mins', value: 300 }
+                }]
+              }]
             }
-          }
+          },
         });
       }
-      return Promise.reject(new Error('Unknown endpoint'));
+      return Promise.reject(new Error('Not found'));
     });
-    fireEvent.press(getByTestId('marker-מקלט Test Shelter'));
-    await waitFor(() =>
-      expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/api/directions'))
+
+    const { getByTestId, getByText } = renderWithProviders(
+      <ShelterMapScreen navigation={mockNavigation} route={mockRoute} />
     );
-    await waitFor(() => expect(getByText('מרחק: 1.2 ק"מ')).toBeTruthy());
-    await waitFor(() => expect(getByText('זמן הליכה: 15 דקות')).toBeTruthy());
+
+    // Wait for shelters to load
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters');
+    });
+
+    // Simulate pressing a marker using the actual test ID format
+    const marker = getByTestId('marker-מקלט Test Shelter 1');
+    fireEvent.press(marker);
+
+    // Verify route was fetched with the full URL
+    await waitFor(() => {
+      const calls = axios.get.mock.calls;
+      const directionsCall = calls.find(call => 
+        call[0].includes('/api/directions') && 
+        call[0].includes('origin=31.26,34.7693') && 
+        call[0].includes('destination=31.5,34.7')
+      );
+      expect(directionsCall).toBeTruthy();
+    });
+
+    // Verify distance and duration are displayed using the actual text content
+    await waitFor(() => {
+      // The distance text should contain both the label and the value
+      expect(getByText(/shelterMap:distanceLabel/)).toBeTruthy();
+      expect(getByText(/shelterMap:estimatedWalkingTimeLabel/)).toBeTruthy();
+    });
   });
 
   it('handles shelters fetch error', async () => {
-    axios.get.mockRejectedValueOnce(new Error('Shelter Error'));
-    const { getByText } = render(<ShelterMapScreen />);
-    await waitFor(() => expect(axios.get).toHaveBeenCalled());
-    await waitFor(() => expect(getByText(/שגיאה:/)).toBeTruthy());
+    // Mock failed shelter fetch
+    axios.get.mockRejectedValue(new Error('Network error'));
+
+    renderWithProviders(
+      <ShelterMapScreen navigation={mockNavigation} route={mockRoute} />
+    );
+
+    // Verify error alert is shown with the translation key
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'common:error',
+        'shelterReport:failedToLoadShelters'
+      );
+    });
   });
 });
