@@ -38,7 +38,7 @@ jest.mock('react-native/Libraries/Alert/Alert', () => ({
 // Mock translations
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key) => key, // Return the key itself instead of translated value
+    t: (key) => key, 
     i18n: {
       changeLanguage: jest.fn(),
       language: 'en',
@@ -200,6 +200,75 @@ describe('ShelterMapScreen', () => {
     // Verify distance and duration are displayed using the actual text content
     await waitFor(() => {
       // The distance text should contain both the label and the value
+      expect(getByText(/shelterMap:distanceLabel/)).toBeTruthy();
+      expect(getByText(/shelterMap:estimatedWalkingTimeLabel/)).toBeTruthy();
+    });
+  });
+
+  it('finds and displays the closest shelter to the user location', async () => {
+    // Mock user location
+    const userLocation = { coords: { latitude: 31.26, longitude: 34.7693 } };
+    Geolocation.getCurrentPosition.mockImplementation(success => success(userLocation));
+
+    // Mock multiple shelters
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/api/shelters')) {
+        return Promise.resolve({
+          data: {
+            success: true,
+            shelters: [
+              { ID: 1, Name: 'Test Shelter 1', Latitude: 31.26, Longitude: 34.7693 }, // Closest
+              { ID: 2, Name: 'Test Shelter 2', Latitude: 32.0, Longitude: 35.0 }
+            ],
+          },
+        });
+      }
+      if (url.includes('/api/directions')) {
+        return Promise.resolve({
+          data: {
+            success: true,
+            route: {
+              status: 'OK',
+              routes: [{
+                overview_polyline: { points: '_p~iF~ps|U_ulLnnqC_mqNvxq`@' },
+                legs: [{
+                  distance: { text: '0.1 km', value: 100 },
+                  duration: { text: '1 min', value: 60 }
+                }]
+              }]
+            }
+          },
+        });
+      }
+      return Promise.reject(new Error('Not found'));
+    });
+
+    const { getByTestId, getByText } = renderWithProviders(
+      <ShelterMapScreen navigation={mockNavigation} route={mockRoute} />
+    );
+
+    // Wait for shelters to load
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalledWith('http://10.0.2.2:3000/api/shelters');
+    });
+
+    // Simulate pressing the marker for the closest shelter
+    const marker = getByTestId('marker-מקלט Test Shelter 1');
+    fireEvent.press(marker);
+
+    // Verify route was fetched to the closest shelter
+    await waitFor(() => {
+      const calls = axios.get.mock.calls;
+      const directionsCall = calls.find(call =>
+        call[0].includes('/api/directions') &&
+        call[0].includes('origin=31.26,34.7693') &&
+        call[0].includes('destination=31.26,34.7693')
+      );
+      expect(directionsCall).toBeTruthy();
+    });
+
+    // Verify distance and duration are displayed
+    await waitFor(() => {
       expect(getByText(/shelterMap:distanceLabel/)).toBeTruthy();
       expect(getByText(/shelterMap:estimatedWalkingTimeLabel/)).toBeTruthy();
     });

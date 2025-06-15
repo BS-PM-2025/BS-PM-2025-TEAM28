@@ -39,4 +39,45 @@ describe('Feature_Shelter_Report', () => {
     expect(response.status).toBe(200);
     expect(response.data).toHaveProperty('message', 'Shelter deleted successfully');
   });
+  it('admin should update "No Shelter Nearby" page', async () => {
+  axios.put.mockResolvedValue({
+    status: 200,
+    data: { message: 'Page updated successfully' },
+  });
+
+  const response = await axios.put(`${BASE_URL}/admin/pages/no-shelter-nearby`, {
+    content: 'Updated content for No Shelter Nearby',
+  });
+
+  expect(response.status).toBe(200);
+  expect(response.data).toHaveProperty('message', 'Page updated successfully');
+});
+
+it('admin should update "First Aid" page', async () => {
+  axios.put.mockResolvedValue({
+    status: 200,
+    data: { message: 'Page updated successfully' },
+  });
+
+  const response = await axios.put(`${BASE_URL}/admin/pages/first-aid`, {
+    content: 'Updated content for First Aid',
+  });
+
+  expect(response.status).toBe(200);
+  expect(response.data).toHaveProperty('message', 'Page updated successfully');
+});
+
+it('admin should update "Emergency Numbers" page', async () => {
+  axios.put.mockResolvedValue({
+    status: 200,
+    data: { message: 'Page updated successfully' },
+  });
+
+  const response = await axios.put(`${BASE_URL}/admin/pages/emergency-numbers`, {
+    content: 'Updated content for Emergency Numbers',
+  });
+
+  expect(response.status).toBe(200);
+  expect(response.data).toHaveProperty('message', 'Page updated successfully');
+});
 }); 

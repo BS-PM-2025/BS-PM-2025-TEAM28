@@ -131,7 +131,7 @@ function Login({ navigation, route }) {
         <Text style={[styles.rememberMeText, darkMode && styles.rememberMeTextDark]}>{t('common:rememberMe')}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin}>
+      <TouchableOpacity style={styles.buttonBlue} onPress={handleLogin} testID="loginButton">
         <Text style={styles.buttonBlueText}>{t('login:loginButton')}</Text>
       </TouchableOpacity>
 
